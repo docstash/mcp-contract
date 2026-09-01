@@ -329,7 +329,7 @@ Share AND PUBLISH a doc — this is the ONLY tool that makes a doc public. Use i
 
 Call this when the user explicitly asks to PUBLISH, make public, get a public/shareable link, or share/revoke per-user access. Don't infer sharing from vague phrasing like "can you give Alice access" without checking what level they want.
 
-**Hints:** `{"title":"Share & publish","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
+**Hints:** `{"title":"Manage sharing","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 

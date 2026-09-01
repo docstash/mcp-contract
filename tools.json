@@ -262,7 +262,7 @@
       "name": "manage_sharing",
       "description": "Share AND PUBLISH a doc — this is the ONLY tool that makes a doc public. Use it to PUBLISH / make public / get a public shareable link (action='set-public', isPublic=true), and to grant/revoke per-user access. Pass `slug` + `action`:\n\n  • 'list'        — list all per-user grants (Viewers + Editors). Does NOT include public-link state (use `read_document` for that — it's on `document.isPublic`).\n  • 'add'         — grant a specific person access. Requires `email`. Optional `level: 'read' | 'write'` (default 'read'). The recipient must be a DocStash user (sign in once at app.docstash.ai). NOT a public link.\n  • 'revoke'      — revoke a per-user grant by `email`. Mirror of 'add'.\n  • 'set-public'  — PUBLISH / unpublish the doc: toggle its PUBLIC LINK. Requires `isPublic: boolean`. true = PUBLISH — anyone with the URL sees the latest version (anonymous, no sign-in); false = revoke the public link. This is the ONLY way to make a doc publicly viewable — a bare stashed url stays private. The doc must be saved (stashed) first; you can't publish an unsaved version. Per-doc only — no version-pinned public links.\n\nCall this when the user explicitly asks to PUBLISH, make public, get a public/shareable link, or share/revoke per-user access. Don't infer sharing from vague phrasing like \"can you give Alice access\" without checking what level they want.",
       "annotations": {
-        "title": "Share & publish",
+        "title": "Manage sharing",
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,

@@ -13,6 +13,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.2.2] — 2026-09-02
+
+### Changed
+
+- **`manage_sharing` display title corrected.** Its human-readable title (shown in
+  clients that render one) is now "Manage sharing" — sentence case, matching every other
+  tool — instead of the raw `manage_sharing` id it had been left as in 0.2.1. The callable
+  tool name is unchanged, so this is display-only and nothing breaks for integrators.
+
+## [0.2.1] — 2026-09-01
+
+### Fixed
+
+- **`manage_sharing` action='add' return value.** Granting a viewer or editor read a
+  singular `grant` field the API does not return — the API responds with the full,
+  refreshed `grants` list — so the tool built a malformed result (and could throw) even
+  though the grant itself succeeded. It now resolves the just-added grant from that list by
+  email and returns the correct `{ grantId, slug, email, level, url }` (`grantId` is null
+  if the row cannot be matched, but the grant still applies).
+
 ## [0.2.0] — 2026-09-01
 
 ### Added
