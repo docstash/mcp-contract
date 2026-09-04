@@ -13,6 +13,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.3.0] — 2026-09-04
+
+### Added
+
+- **Surgical edit tools — `edit_pdf` / `edit_docx` / `edit_page` / `edit_text` /
+  `edit_app`.** The default way to change an existing doc: emit ONLY the deltas as
+  `{ old_string → new_string }` pairs instead of re-authoring the whole document —
+  far cheaper and it can't drift unrelated parts. One tool per type (mirroring the
+  create_/get_ families) so each edit shows a FRESH inline preview of the new
+  version. The create tools' guidance now points to them for every fix/tweak and
+  reserves a full re-emit for near-total rewrites. Edits apply in order, match
+  exactly (whitespace-tolerant) and must be unique (or `replaceAll`); a
+  stale/ambiguous `old_string` fails cleanly without changing anything.
+  - **In place** (default): the change becomes a new version of the doc.
+  - **Copy mode** (`copy: true` + `name`): leaves the source untouched and creates a
+    NEW doc — a filled-in copy with the edits applied. The template flow: keep one
+    master, spin off variants (an invoice/offer-letter/report template → a copy per
+    client).
+  - `edit_app` edits a multi-file bundle by naming the `file` per edit. Every edit's
+    raw `old_string`/`new_string` (and, for a copy, the source slug) is recorded on
+    the version's history event. `xlsx` has no edit tool — re-emit with `create_sheet`.
+- **`read_document` — multi-file app support.** A bare read of an `app` returns the
+  bundle's file paths in `files`; passing `file` returns that one file's contents in
+  `content` — so an agent can read a file, then change it with `edit_document`.
+
 ## [0.2.3] — 2026-09-03
 
 ### Added

@@ -172,11 +172,13 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 
 ## `read_document`
 
-Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or edit it into a new version (edit → then call the matching create_* tool with this SAME slug).
+Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_docx / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug).
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
 Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by manage_document action='revert'). To DISPLAY the doc to the user instead, call the matching `get_*` show tool (get_pdf / get_page / get_sheet / …) — it renders inline entirely off your context.
+
+MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no single body). Pass `file` (a path from that list) to read ONE file's contents into `content` — then change it surgically with `edit_app` (same `file`).
 
 **Hints:** `{"title":"Read document","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -193,6 +195,10 @@ Pass `withHistory: true` to also include the activity feed — every event newes
     "withHistory": {
       "type": "boolean",
       "description": "If true, also include the activity history (event feed with artifact ids) in the response."
+    },
+    "file": {
+      "type": "string",
+      "description": "APP ONLY: a bundle file path (from the `files` list a bare read returns) to read that one file's contents into `content`."
     }
   },
   "required": [
@@ -727,6 +733,377 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
   "required": [
     "type",
     "content"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_pdf`
+
+The DEFAULT way to change a PDF — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_pdf` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing PDF, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_pdf` edits only a PDF; a wrong-type call names the right tool.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+
+
+**Hints:** `{"title":"Edit PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "Ordered surgical edits; each applies to the result of the previous one."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug",
+    "edits"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_docx`
+
+The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_docx` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing Word (.docx) doc, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_docx` edits only a Word (.docx) doc; a wrong-type call names the right tool.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+
+
+**Hints:** `{"title":"Edit Word (.docx) doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "Ordered surgical edits; each applies to the result of the previous one."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug",
+    "edits"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_page`
+
+The DEFAULT way to change a web page — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_page` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing web page, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_page` edits only a web page; a wrong-type call names the right tool.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+
+
+**Hints:** `{"title":"Edit web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "Ordered surgical edits; each applies to the result of the previous one."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug",
+    "edits"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_text`
+
+The DEFAULT way to change a markdown / text / code doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_text` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing markdown / text / code doc, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_text` edits only a markdown / text / code doc; a wrong-type call names the right tool.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+
+
+**Hints:** `{"title":"Edit markdown / text / code doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "Ordered surgical edits; each applies to the result of the previous one."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug",
+    "edits"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_app`
+
+The DEFAULT way to change a multi-file app — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_app` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing multi-file app, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_app` edits only a multi-file app; a wrong-type call names the right tool.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- Each edit names the `file` in the bundle to change; the str_replace applies within that file. Never re-emit a whole multi-file bundle for a small change. `read_document` with a `file` argument returns one file's current contents (a bare `read_document` lists the bundle's files).
+
+
+**Hints:** `{"title":"Edit multi-file app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "The bundle file this edit targets (e.g. 'index.html', 'src/app.js'). Required."
+          },
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "file",
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "description": "Ordered surgical edits; each applies to the result of the previous one."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug",
+    "edits"
   ],
   "additionalProperties": true
 }
