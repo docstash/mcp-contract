@@ -13,6 +13,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.2.3] — 2026-09-03
+
+### Added
+
+- **`create_pdf` — automatic page margins.** Body content that would otherwise run
+  flush to the sheet edge now gets a comfortable margin at render time, and DocStash
+  honors padding set on `.ds-page` (a page split into regions previously discarded it,
+  printing content flush to the paper edge). Keep authoring your own margins as before;
+  add `class="ds-page ds-bleed"` to opt a page out for a full-bleed cover, background,
+  or edge-to-edge image. The tool description documents this.
+- **`box-overflow` — new PDF render finding.** The `errors` report now flags content
+  wider than its own box or table cell (a long unbreakable string, a `nowrap` line, an
+  oversized child, a table wider than its column), which spills or clips on a fixed
+  page. Advisory, like every other finding — nothing blocks a stash.
+
+### Fixed
+
+- **ChatGPT inline-preview widget.** Restored the `openai/outputTemplate` `_meta`
+  binding on the widget tool definitions and their results. Without it ChatGPT mounted
+  the preview widget but never received the tool result, so the widget loaded
+  indefinitely; it renders again now. No effect on other hosts, which bind the widget
+  from the tool's static `_meta` and ignore the key.
+
 ## [0.2.2] — 2026-09-02
 
 ### Changed
