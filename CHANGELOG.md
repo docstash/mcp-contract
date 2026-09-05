@@ -13,6 +13,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.3.2] — 2026-09-05
+
+### Added
+
+- **`RESULTS.md` — the results half of the contract.** The mirror now documents
+  what each tool hands BACK to the agent, per scenario (a clean document, layout
+  errors, warnings, copy/template mode, screenshot QA, reads), alongside the tool
+  descriptions and server instructions. No behavior change — it records the
+  situational guidance the request handlers already return, so a reader gets the
+  full contract, not just the call surface.
+
 ## [0.3.1] — 2026-09-05
 
 ### Fixed
