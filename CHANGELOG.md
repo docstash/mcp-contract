@@ -13,6 +13,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.3.1] — 2026-09-05
+
+### Fixed
+
+- **Iteration now steers to the `edit_*` tools, not `create_*`.** The
+  `screenshot_document` result and the create tools' "to revise this doc"
+  guidance still pointed at the `create_*` tools on some paths, so an agent
+  (ChatGPT most visibly) would re-author the whole document — or spawn a new
+  one — instead of applying a surgical edit. Both now steer to the matching
+  `edit_*` tool on the same slug; a type with no edit tool (`xlsx`) steers to
+  `create_sheet`. Result-note wording only — the tool schemas and server
+  `instructions` are unchanged from 0.3.0.
+
 ## [0.3.0] — 2026-09-04
 
 ### Added
