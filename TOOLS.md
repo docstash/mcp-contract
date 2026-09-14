@@ -172,7 +172,7 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 
 ## `read_document`
 
-Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_docx / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug).
+Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_docx / edit_sheet / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug; for a docx or sheet, match the VISIBLE text/value and DocStash handles the JSON escaping).
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
@@ -430,7 +430,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
     },
     "content": {
       "type": "string",
-      "description": "A complete `<!doctype html>` document, everything inline, with each page wrapped in `<div class=\"ds-page\">…</div>`. DocStash renders + presents it as a real paginated PDF — do NOT pass a binary."
+      "description": "A complete `<!doctype html>` document, everything inline, with each page wrapped in `<div class=\"ds-page\">…</div>`. DocStash renders + presents it as a real paginated PDF."
     }
   },
   "required": [
@@ -444,10 +444,29 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ## `create_docx`
 
-Generate an EDITABLE Word document (.docx) for DocStash and show the user an INLINE PREVIEW — a reflowable Word doc on a US-Letter page (1" margins). Use this when the user specifically wants a WORD doc / editable .docx; for a DESIGNED, print-perfect document use `create_pdf` instead. `content` = MARKDOWN — the renderer walks it straight to a real .docx. The browser renders it at view time — do NOT generate a binary.
-  Author rich markdown (don't flatten to plain text). Mapped to native Word: headings (#..###### → real Heading styles a TOC can use), **bold**/*italic*/~~strike~~, `inline code` + ```fenced blocks```, ordered/unordered (nested) lists, tables, blockquotes, links, images (![alt](https-url), embedded at view time), ==highlight==, <u>underline</u>, footnotes (text[^1] + [^1]: note), and a page break via a lone ---pagebreak--- (or \f, or <!-- pagebreak -->). IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA).
+Generate an EDITABLE Word document (.docx) for DocStash and show the user an INLINE PREVIEW. Use this when the user specifically wants a WORD doc / editable .docx; for a DESIGNED, print-perfect document use `create_pdf` instead. `content` = JSON.stringify(DocxSpec) — the browser mints a real .docx from it at view/download time. Do NOT generate a binary. Spec schema below.
+The spec expresses real Word fidelity: document font, named styles, page setup (size / orientation / margins / columns), headers & footers, a generated table of contents, per-run fonts / colors / sizes, and tables with merged / shaded cells. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA).
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+
+DOCX SPEC SHAPE — content = JSON.stringify(DocxSpec):
+{
+  title?, defaults?: { font?, size?(pt), color?(hex), lineSpacing? },
+  page?: { size?: 'A4'|'Letter'|'Legal', orientation?: 'portrait'|'landscape', margins?: {top,right,bottom,left}(inches), columns? },
+  header?: { content, align? }, footer?: { content, align? },
+  toc?: true | { title?, maxLevel? },   // generated table of contents
+  styles?: [{ id, name?, font?, size?, color?, bold?, italic?, align?, spacing? }],   // reusable named paragraph styles
+  body: Block[]
+}
+Block = one of:
+  { type:"heading", level:1-6, content, align? }
+  { type:"paragraph", content, align?, style?, spacing?:{before,after,line}, indent?:{left,firstLine,hanging} }
+  { type:"list", ordered?, items:[{ content, level? }] }
+  { type:"table", rows:[{ cells:[{ content, colSpan?, rowSpan?, align?, valign?, shading?(hex), bold? }], header? }], widths?(% per column), align?, cellPadding?(in), borderColor?(hex), borderWidth?(pt), banded?, borders? }
+  { type:"image", src(DIRECT image URL), alt?, width?, height?, align? }
+  { type:"quote", content } | { type:"code", text, language? } | { type:"divider" } | { type:"pageBreak" } | { type:"toc", title?, maxLevel? }
+content = a string, a run, or a list of either.
+Run = { text, bold?, italic?, underline?, strike?, code?, color?(hex), highlight?, font?, size?(pt), link?(url), superscript?, subscript? }.
 
 **Hints:** `{"title":"Create Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
 
@@ -471,7 +490,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
     },
     "content": {
       "type": "string",
-      "description": "The document as MARKDOWN — the renderer walks it straight to a real .docx."
+      "description": "JSON.stringify(DocxSpec). See the DOCX SPEC SHAPE in this tool description."
     }
   },
   "required": [
@@ -550,7 +569,7 @@ XLSX SPEC SHAPE (when kind='xlsx'):
     },
     "content": {
       "type": "string",
-      "description": "JSON.stringify(SheetSpec). See the SHEET SPEC SHAPE in this tool description. Do NOT pass an .xlsx binary."
+      "description": "JSON.stringify(SheetSpec). See the SHEET SPEC SHAPE in this tool description."
     }
   },
   "required": [
@@ -610,7 +629,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
       "additionalProperties": {
         "type": "string"
       },
-      "description": "Map of relative paths → UTF-8 file contents (e.g. `{ \"index.html\": \"<!doctype html>...\", \"styles.css\": \"body { ... }\" }`). The MCP server zips everything in memory and uploads as a bundle. Paths can't start with '/' or contain '..'. SELF-CONTAINED: every local URL your entry references — scripts, styles, images, fonts, favicon — MUST be a key here; for anything you don't bundle, use an absolute CDN URL (https://…). Never reference a local path you didn't include."
+      "description": "Map of relative paths → UTF-8 file contents (e.g. `{ \"index.html\": \"<!doctype html>...\", \"styles.css\": \"body { ... }\" }`). The MCP server zips everything in memory and uploads as a bundle. Paths can't start with '/' or contain '..'. Must be SELF-CONTAINED — see the rule in this tool's description."
     },
     "entry": {
       "type": "string",
@@ -742,7 +761,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ## `edit_pdf`
 
-The DEFAULT way to change a PDF — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_pdf` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing PDF, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_pdf` edits only a PDF; a wrong-type call names the right tool.
+The DEFAULT way to change a PDF — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_pdf` edits only a PDF; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
@@ -815,13 +834,15 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
 
 ## `edit_docx`
 
-The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_docx` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing Word (.docx) doc, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_docx` edits only a Word (.docx) doc; a wrong-type call names the right tool.
+The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_docx` edits only a Word (.docx) doc; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
 - Edits apply in order, each to the result of the previous.
 - **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- This doc is a JSON spec. For a VALUE change (a run's text, a heading, a cell, a hex color), match `old_string` on the VISIBLE text/value — NOT the raw JSON; you never escape quotes or backslashes, DocStash handles the JSON and re-validates.
+- To ADD structure, use `appendBlocks` (Block[] onto the body; optional `after` text anchor to place it) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
 
 
 **Hints:** `{"title":"Edit Word (.docx) doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
@@ -868,8 +889,19 @@ The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it in
         ],
         "additionalProperties": false
       },
-      "minItems": 1,
-      "description": "Ordered surgical edits; each applies to the result of the previous one."
+      "description": "Ordered surgical VALUE edits; each applies to the result of the previous. Optional when using a structural append op."
+    },
+    "appendBlocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "description": "STRUCTURAL add: Block[] appended to the document body (same block shapes as create_docx — heading / paragraph / table / list / image / …). Use to ADD content that old_string/new_string cannot."
+    },
+    "after": {
+      "type": "string",
+      "description": "Insert `appendBlocks` immediately AFTER the block whose VISIBLE text contains this string (e.g. a heading). Omit to append at the end of the doc."
     },
     "description": {
       "type": "string",
@@ -877,8 +909,110 @@ The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it in
     }
   },
   "required": [
-    "slug",
-    "edits"
+    "slug"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `edit_sheet`
+
+The DEFAULT way to change a spreadsheet — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_sheet` edits only a spreadsheet; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
+
+- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
+- `new_string` replaces it; an empty string deletes the matched text.
+- Edits apply in order, each to the result of the previous.
+- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- This doc is a JSON spec. For a VALUE change (a run's text, a heading, a cell, a hex color), match `old_string` on the VISIBLE text/value — NOT the raw JSON; you never escape quotes or backslashes, DocStash handles the JSON and re-validates.
+- To ADD structure, use `addSheet` (a whole new sheet) or `addRows` (rows onto an existing sheet) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
+
+
+**Hints:** `{"title":"Edit spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+    },
+    "copy": {
+      "type": "boolean",
+      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
+    },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "old_string": {
+            "type": "string",
+            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "The replacement text. An empty string deletes the matched text."
+          },
+          "replaceAll": {
+            "type": "boolean",
+            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
+          }
+        },
+        "required": [
+          "old_string",
+          "new_string"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Ordered surgical VALUE edits; each applies to the result of the previous. Optional when using a structural append op."
+    },
+    "addSheet": {
+      "type": "object",
+      "additionalProperties": {},
+      "description": "STRUCTURAL add: a whole new Sheet { name, rows: Row[][], … } appended to the workbook (same shape as a create_sheet sheets[] entry)."
+    },
+    "addRows": {
+      "type": "object",
+      "properties": {
+        "sheet": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "description": "Target sheet by name or 0-based index; defaults to the last sheet."
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {}
+          },
+          "description": "Row[][] to append (same cell shapes as create_sheet)."
+        }
+      },
+      "required": [
+        "rows"
+      ],
+      "additionalProperties": false,
+      "description": "STRUCTURAL add: append rows to an existing sheet."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional one-line summary of the change, recorded on the new version."
+    }
+  },
+  "required": [
+    "slug"
   ],
   "additionalProperties": true
 }
@@ -888,7 +1022,7 @@ The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it in
 
 ## `edit_page`
 
-The DEFAULT way to change a web page — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_page` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing web page, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_page` edits only a web page; a wrong-type call names the right tool.
+The DEFAULT way to change a web page — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_page` edits only a web page; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
@@ -961,7 +1095,7 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
 
 ## `edit_text`
 
-The DEFAULT way to change a markdown / text / code doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_text` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing markdown / text / code doc, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_text` edits only a markdown / text / code doc; a wrong-type call names the right tool.
+The DEFAULT way to change a markdown / text / code doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_text` edits only a markdown / text / code doc; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
@@ -1034,7 +1168,7 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 
 ## `edit_app`
 
-The DEFAULT way to change a multi-file app — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs instead of re-authoring the whole document. Reach for `edit_app` (not `create_*`) whenever the user says change / fix / update / tweak / correct an existing multi-file app, or "use this as a template / make a version of this for X". Cheaper (you output a few lines, not the whole file) and safer (unrelated parts can't drift). Only re-run the create tool with full content when you're rewriting most of the doc. `edit_app` edits only a multi-file app; a wrong-type call names the right tool.
+The DEFAULT way to change a multi-file app — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_app` edits only a multi-file app; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.

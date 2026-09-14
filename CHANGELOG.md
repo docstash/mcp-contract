@@ -13,6 +13,63 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
   bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
 
+## [0.5.1] — 2026-09-13
+
+### Changed
+
+- **Tool surface de-duplicated (no behavior change).** Rules that were restated
+  across the server instructions, tool descriptions, and result notes are now
+  single-sourced (kept in one place with terse pointers elsewhere), shrinking the
+  tool manifest. The agent-facing contract is unchanged.
+
+## [0.5.0] — 2026-09-12
+
+### Added
+
+- **Surgical edits for the xlsx spec — `edit_sheet`.** The SheetSpec now edits in
+  place like the docx spec: `{ old_string → new_string }` on the VISIBLE cell
+  value (a number, a label, a hex color), so a large workbook no longer re-emits in
+  full for a one-cell fix. DocStash JSON-escapes the strings — a quote or backslash
+  in the edit can't break the stored spec — and re-validates the result against the
+  schema, so a bad edit fails cleanly. Structural ADDITIONS are surgical too, via
+  append ops that work on the parsed spec (so the escape-heal can't neutralize
+  them): `addSheet` (a whole new sheet) / `addRows` (rows onto an existing sheet).
+  The surgical `edit_*` family is now `edit_pdf` / `edit_docx` / `edit_sheet` /
+  `edit_page` / `edit_text` / `edit_app`.
+
+## [0.4.0] — 2026-09-12
+
+### Changed
+
+- **BREAKING — `create_docx` now takes a `DocxSpec` JSON, not Markdown.**
+  `content` is `JSON.stringify(DocxSpec)`; the browser mints a real, editable
+  .docx from it at view / download time. A Markdown body is no longer accepted.
+  This mirrors `create_sheet` (agent emits a spec, not a binary).
+
+### Added
+
+- **Full Word fidelity on `create_docx` (the DocxSpec).** Document defaults
+  (font / size / color / line spacing), named paragraph styles, page setup
+  (size / orientation / margins / columns), headers & footers, a generated,
+  clickable table of contents, six heading levels, per-run fonts / colors /
+  sizes / links / super- and subscript / highlight, nested ordered and unordered
+  lists, quotes, code blocks, dividers, page breaks, and embedded images.
+- **Rich tables.** Column widths, cell merges (`colSpan` / `rowSpan`), per-cell
+  shading, horizontal and vertical alignment (`valign`), `cellPadding`,
+  `borderColor` / `borderWidth`, `banded` zebra rows, and table `align` on the
+  page.
+- **Surgical edits for the docx spec — `edit_docx`.** The DocxSpec now edits in
+  place like every other type: `{ old_string → new_string }` on the VISIBLE text
+  or value (a run, a heading, a hex color), so a 10-page doc no longer re-emits in
+  full for a one-line fix. DocStash JSON-escapes the strings — a quote or backslash
+  in the edit can't break the stored spec — and re-validates the result against the
+  schema, so a bad edit fails cleanly. Structural ADDITIONS are surgical too, via
+  an append op that works on the parsed spec (so the escape-heal can't neutralize
+  it): `edit_docx` takes `appendBlocks` (+ an optional `after` text anchor). Only
+  reorders, removals, or a near-total rewrite re-emit via `create_docx`. The
+  surgical `edit_*` family is now `edit_pdf` / `edit_docx` / `edit_page` /
+  `edit_text` / `edit_app`.
+
 ## [0.3.2] — 2026-09-05
 
 ### Added

@@ -12,7 +12,7 @@ verbatim; `<slug>` and other interpolated values are filled with examples.
 
 ---
 
-## `create_pdf` / `create_docx` / `create_sheet` / `create_page` / `create_text` / `create_app` and `edit_pdf` / `edit_docx` / `edit_page` / `edit_text` / `edit_app`
+## `create_pdf` / `create_docx` / `create_sheet` / `create_page` / `create_text` / `create_app` and `edit_pdf` / `edit_docx` / `edit_sheet` / `edit_page` / `edit_text` / `edit_app`
 
 A create or edit STAGES a new version (it does not save or publish). Payload:
 
@@ -35,7 +35,9 @@ A create or edit STAGES a new version (it does not save or publish). Payload:
 
 `agentNote`:
 
-> Preview shown; NOT stashed. A plain create/generate ask is now DONE — present the preview and STOP: call stash with slug=k3n9qz ONLY when the user EXPLICITLY says to save / stash / publish it (or clicks Stash in the inline preview). The inline preview IS the deliverable — never generate, attach, or hand back a file (no binary .pdf/.docx/.xlsx, no download card, no /mnt/data path); if you reference it in text, share `shareUrl` (https://app.docstash.ai/k3n9qz) as a plain https hyperlink and nothing else. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc. To throw it away, call discard with slug=k3n9qz.
+> Preview shown; NOT stashed — present it and STOP, and do NOT call stash unless the user explicitly asks. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc. To throw it away, call discard with slug=k3n9qz.
+
+(The "no binary / share `shareUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote no longer restates either.)
 
 ### PDF with layout errors (`severity: "error"`)
 
@@ -47,7 +49,9 @@ A create or edit STAGES a new version (it does not save or publish). Payload:
 >   • page 3: text overflows the page bottom by 84px (.ds-content > .section:last-child)
 >   • page 5: two blocks overlap (.chart over .caption)
 > Nothing reflows — YOU own pagination: SPLIT content across more `.ds-page` blocks or recompose the page — do NOT strip design elements or shrink the font to force a fit.
-> NEXT STEP: call `screenshot_document` with slug=k3n9qz to SEE the rendered pages before rewriting — pass firstPage/lastPage to screenshot ONLY the pages the findings name (not the whole doc); the images show exactly what broke, so you fix it in one pass instead of guessing from the numbers. Then apply the fix with `edit_pdf` (slug=k3n9qz) — emit just the changed spans, not the whole doc — and screenshot the same pages again until clean. (Re-run `create_pdf` with the same slug only for a near-total rewrite.)
+> NEXT STEP: call `screenshot_document` with slug=k3n9qz to SEE the rendered pages before rewriting — pass firstPage/lastPage to screenshot ONLY the pages the findings name (not the whole doc); the images show exactly what broke, so you fix it in one pass instead of guessing from the numbers, then screenshot again until clean.
+
+(The `agentNote` then appends the shared slug-steering line — "revise with `edit_pdf` on the same slug, don't omit it" — from `slugSteeringNote`, so the fix/iterate rule isn't re-stated here.)
 
 ### Web page / app that is broken (`severity: "error"`)
 
@@ -96,9 +100,7 @@ geometry cannot have changed).
 > 2 layout error(s) in k3n9qz:
 >   • page 3: text overflows the page bottom by 84px (.ds-content > .section:last-child)
 >   • page 5: two blocks overlap (.chart over .caption)
-> Fix them by EDITING this same doc — call `edit_pdf` with slug=k3n9qz and emit ONLY the changed spans. Do NOT create a new document (that spawns a duplicate); re-run `create_pdf` with the SAME slug only for a near-total rewrite.
-
-For a spreadsheet (no edit tool), the fix tool is `create_sheet` on the same slug.
+> Fix them by EDITING this same doc. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
 
 When the images don't cover the whole doc, the note appends the page window, e.g.:
 
@@ -115,11 +117,20 @@ When the images don't cover the whole doc, the note appends the page window, e.g
 A silent read — nothing is rendered or shown to the user. Returns the doc's
 metadata, a reference to its latest version, `content` (the body text for
 text-like kinds — html/md/text, agent-authored pdf print-HTML, and the
-xlsx/docx specs; binary uploads are not text-extractable), and any unresolved
-lint `errors` on the latest version. This is also how to re-check errors
-mid-fix — there is no separate errors tool. For an `app`, a bare read returns
-the bundle's file paths in `files`; passing `file` returns that one file's
-contents in `content`.
+xlsx/docx specs; binary uploads are not text-extractable), `organizationId` +
+`sameOrganization`, and any unresolved lint `errors` on the latest version. This
+is also how to re-check errors mid-fix — there is no separate errors tool. For an
+`app`, a bare read returns the bundle's file paths in `files`; passing `file`
+returns that one file's contents in `content`.
+
+`agentNote` opens with `SILENT read — nothing was rendered or shown to the user.`,
+then appends only the clauses that apply:
+
+- **content not inlinable** (binary upload): how to fetch it from the artifact's `fileUrl`.
+- **cross-organization** (`sameOrganization: false`):
+  > NOTE: this doc lives in a DIFFERENT organization than your active one. Reading across organizations is fine, but a NEW doc you author lands in the ACTIVE organization — call get_organizations / set_organization first if it should go here instead.
+- **unresolved findings**: the same findings list + `screenshot_document` recheck block the authoring notes use.
+- **slug steering**: the shared "revise with the matching `edit_*` tool on the same slug" line (on LITE, plus a "share the URL to let the user view it" hint).
 
 ---
 
