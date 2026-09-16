@@ -10,8 +10,65 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 
 - **MAJOR** — a breaking change to a tool's name, its arguments, or a required input.
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
-- **PATCH** — wording, clarity, or de-duplication that does not change behavior. Patch
-  bumps are applied automatically when the specs change; MINOR / MAJOR are made by hand.
+- **PATCH** — wording, clarity, or de-duplication that does not change behavior.
+
+## [0.6.0] — 2026-09-16
+
+### Changed
+
+- **BREAKING — the per-type SHOW tools are renamed `get_*` → `show_*`.**
+  `get_pdf` / `get_docx` / `get_sheet` / `get_page` / `get_text` are now
+  `show_pdf` / `show_docx` / `show_sheet` / `show_page` / `show_text`. The name
+  now matches what they do — DISPLAY a doc inline, off your context — and their
+  "Show X" title, completing the `create_X` / `edit_X` / `show_X` triad per type
+  and disambiguating them from `read_document` (which loads a doc's text INTO
+  your context). Inputs and results are unchanged; only the names.
+
+### Fixed
+
+- **Show tools no longer duplicate the document into the model-visible result
+  channel for hosts that fetch their own preview bytes** — the same gate 0.5.3
+  added for create/edit now also covers the show tools. The source bytes ride
+  the app-only fetch channel (kept out of the model's context); the inline
+  fallback copy on the result is sent only to hosts that can't fetch it
+  themselves. No change to the rendered preview.
+
+## [0.5.4] — 2026-09-16
+
+### Changed
+
+- **Tool display titles unified across the create / edit / show families (no
+  behavior change).** Each doc type's title now comes from one source, so it
+  reads the same everywhere instead of drifting per family: "Edit Word doc" /
+  "Show Word doc" (were "…Word (.docx) doc"), "Edit text or code" / "Show text
+  or code" (were "…markdown / text / code doc"), and "Edit web app" (was "Edit
+  multi-file app"). Tool names, inputs, and results are unchanged.
+
+## [0.5.3] — 2026-09-16
+
+### Fixed
+
+- **Create/edit no longer duplicate the whole document into the model-visible
+  result channel on hosts that fetch their own preview bytes.** The inline
+  preview pulls a doc's source bytes over the app-only `get_file` channel, which
+  keeps them out of the model's context. Create/edit ALSO inlined those bytes on
+  the tool result as a fallback for hosts that can't make that fetch — but some
+  hosts surface result content to their model, so a large document re-entered the
+  model's context on every create/edit (and every surgical edit). The inline copy
+  is now sent only to hosts that actually need it; hosts whose widget fetches its
+  own bytes receive the identity handle only, and re-fetch the bytes off-context
+  via `get_file`. No change to any tool's inputs or the rendered preview.
+
+## [0.5.2] — 2026-09-16
+
+### Fixed
+
+- **`create_app` / `edit_app` no longer mount a perma-loading preview.** A
+  multi-file app bundle has no in-widget renderer, so the inline preview widget
+  mounted but never received bytes and loaded forever. Both tools now return the
+  review-link surface on every host: the clean `app.docstash.ai/<slug>` link the
+  user opens, with no widget mounted and no app source bytes riding the tool
+  result. Every other type keeps its inline preview unchanged.
 
 ## [0.5.1] — 2026-09-13
 

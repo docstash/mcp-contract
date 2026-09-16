@@ -138,5 +138,5 @@ then appends only the clauses that apply:
 
 - **`stash`** — saves the staged version (the doc stays PRIVATE, not published) and returns the doc's `url`. To make it public afterward, call `manage_sharing` with `action: "set-public"`.
 - **`discard`** — drops the staged working copy, keeping the live version.
-- **the `get_*` show tools** (`get_pdf` / `get_docx` / `get_sheet` / `get_page` / `get_text`) — render the doc inline for the user and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug).
+- **the `show_*` tools** (`show_pdf` / `show_docx` / `show_sheet` / `show_page` / `show_text`) — render the doc inline for the user and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug).
 - **`manage_document`** (rename / trash / restore / delete), **`manage_sharing`**, **`list_documents`**, **`list_org_members`**, **`get_organizations`**, **`set_organization`** — return the shapes documented on each tool's own entry in `TOOLS.md`.

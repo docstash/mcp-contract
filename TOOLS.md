@@ -40,9 +40,9 @@ Returns slug, name, url, type, language, owner attribution, and latest-version s
 
 ---
 
-## `get_pdf`
+## `show_pdf`
 
-DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `get_pdf` shows only a PDF; a wrong-type call names the right tool.
+DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_pdf` shows only a PDF; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show PDF","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -66,11 +66,11 @@ DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go 
 
 ---
 
-## `get_docx`
+## `show_docx`
 
-DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `get_docx` shows only a Word (.docx) doc; a wrong-type call names the right tool.
+DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_docx` shows only a Word (.docx) doc; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show Word (.docx) doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show Word doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -92,9 +92,9 @@ DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your conte
 
 ---
 
-## `get_sheet`
+## `show_sheet`
 
-DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `get_sheet` shows only a spreadsheet; a wrong-type call names the right tool.
+DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_sheet` shows only a spreadsheet; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show spreadsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -118,9 +118,9 @@ DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (b
 
 ---
 
-## `get_page`
+## `show_page`
 
-DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `get_page` shows only a web page; a wrong-type call names the right tool.
+DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_page` shows only a web page; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show web page","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -144,11 +144,11 @@ DISPLAY a web page to the user inline by slug — renders OFF your context (byte
 
 ---
 
-## `get_text`
+## `show_text`
 
-DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `get_text` shows only a markdown / text / code doc; a wrong-type call names the right tool.
+DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown / text / code doc; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show markdown / text / code doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show text or code","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -176,7 +176,7 @@ Read a document's CONTENT into your context by slug — a SILENT read: NOTHING i
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
-Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by manage_document action='revert'). To DISPLAY the doc to the user instead, call the matching `get_*` show tool (get_pdf / get_page / get_sheet / …) — it renders inline entirely off your context.
+Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by manage_document action='revert'). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_sheet / …) — it renders inline entirely off your context.
 
 MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no single body). Pass `file` (a path from that list) to read ONE file's contents into `content` — then change it surgically with `edit_app` (same `file`).
 
@@ -394,7 +394,7 @@ PAGE CONTRACT — a PDF is a stack of FIXED A4 sheets (794×1123px @96dpi), not 
 
 STRUCTURE EACH PAGE WITH REGIONS (recommended) — mark semantic bands and DocStash lays them out for you:
   • `.ds-content` — the body. Wrap each page's content in it. It fills the region BETWEEN the header/footer bands; if it overruns that region, DocStash shrinks THE CONTENT (only) to fit — a `squeezed` WARNING, not an error, so pace your pages so you rarely hit it and never rely on it. Content is bounded to its region, so it can't collide with the bands.
-  • `.ds-header` / `.ds-footer` — pinned top/bottom bands (optional, recommended for multi-page docs). Declare them ONCE at the TOP LEVEL (a `.ds-header` / `.ds-footer` OUTSIDE any `.ds-page`) and DocStash repeats them on every page EXCEPT the cover (page 1); a page's own band overrides, and `class="ds-page ds-no-header"` (or `ds-no-footer`) suppresses. Put `<span class="ds-pageno"></span>` / `<span class="ds-pagetotal"></span>` in a footer — DocStash fills the number / total; never hand-number pages.
+  • `.ds-header` / `.ds-footer` — pinned top/bottom bands. OMIT both unless the user explicitly asks for a running header/footer (or for page numbers) — do NOT auto-add a title or tagline band; a bare document has none. When asked: declare them ONCE at the TOP LEVEL (a `.ds-header` / `.ds-footer` OUTSIDE any `.ds-page`) and DocStash repeats them on every page EXCEPT the cover (page 1); a page's own band overrides, and `class="ds-page ds-no-header"` (or `ds-no-footer`) suppresses. Put `<span class="ds-pageno"></span>` / `<span class="ds-pagetotal"></span>` in a footer — DocStash fills the number / total; never hand-number pages.
   • `.ds-bg` — an optional decorative full-bleed background (image / gradient / tint) that always COVERS the sheet and never shrinks with the content; keep positional / anchored elements in `.ds-content`, not here.
   • Make page 1 an attractive COVER. A bare `.ds-page` with content directly inside (no region classes) still works — it is treated as one block that shrinks as a WHOLE if it overruns the sheet — but regions give you pinned chrome, auto page numbers, a full-bleed background, and content that can't collide, so prefer them.
 
@@ -453,7 +453,7 @@ DOCX SPEC SHAPE — content = JSON.stringify(DocxSpec):
 {
   title?, defaults?: { font?, size?(pt), color?(hex), lineSpacing? },
   page?: { size?: 'A4'|'Letter'|'Legal', orientation?: 'portrait'|'landscape', margins?: {top,right,bottom,left}(inches), columns? },
-  header?: { content, align? }, footer?: { content, align? },
+  header?: { content, align? }, footer?: { content, align? },   // OMIT both unless the user explicitly asks for a running header/footer — do NOT auto-add a title or tagline band; a bare document has none
   toc?: true | { title?, maxLevel? },   // generated table of contents
   styles?: [{ id, name?, font?, size?, color?, bold?, italic?, align?, spacing? }],   // reusable named paragraph styles
   body: Block[]
@@ -583,7 +583,7 @@ XLSX SPEC SHAPE (when kind='xlsx'):
 
 ## `create_app`
 
-Generate a LIVE WEB APP (a multi-file bundle) for DocStash and show the user an INLINE PREVIEW. Use this ONLY when you're genuinely shipping MULTIPLE files (e.g. index.html + a separate app.js + styles.css + local assets). For a single self-contained page, use `create_page` instead — it has no bundle, so it can't fail on a missing local file.
+Generate a LIVE WEB APP (a multi-file bundle) for DocStash and stage an UNSAVED VERSION the user reviews at a docstash.ai link. Use this ONLY when you're genuinely shipping MULTIPLE files (e.g. index.html + a separate app.js + styles.css + local assets). For a single self-contained page, use `create_page` instead — it has no bundle, so it can't fail on a missing local file.
 Deliver the finished app THROUGH this tool — DocStash hosts the bundle live at a shareable URL. Do NOT leave it as a local file/artifact or paste the files into the chat.
 
 Pass `files: { "path/to/file": "<contents>", ... }`; the MCP server zips in-memory and uploads as a bundle. YOU MUST declare:
@@ -602,7 +602,7 @@ SELF-CONTAINED BUNDLE RULE — the bundle must stand alone. Every LOCAL URL your
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the unsaved version and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
 
@@ -845,7 +845,7 @@ The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it in
 - To ADD structure, use `appendBlocks` (Block[] onto the body; optional `after` text anchor to place it) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
 
 
-**Hints:** `{"title":"Edit Word (.docx) doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -1104,7 +1104,7 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
-**Hints:** `{"title":"Edit markdown / text / code doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -1173,12 +1173,12 @@ The DEFAULT way to change a multi-file app — edit it in place, or copy it into
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
 - Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
+- **In-place** (default): the change lands as a new version of `slug`, staged as an UNSAVED VERSION the user reviews at its docstash.ai link (an app has no inline preview).
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 - Each edit names the `file` in the bundle to change; the str_replace applies within that file. Never re-emit a whole multi-file bundle for a small change. `read_document` with a `file` argument returns one file's current contents (a bare `read_document` lists the bundle's files).
 
 
-**Hints:** `{"title":"Edit multi-file app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
 
 ### Input schema
 
