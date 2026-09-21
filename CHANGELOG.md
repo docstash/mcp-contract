@@ -12,6 +12,54 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [1.1.1] — 2026-09-21
+
+### Changed
+
+- **The PDF preview widget now renders the REAL baked binary.** Previously it
+  rendered the agent's print-HTML draft in a sandboxed shell. It now fetches the
+  doc's baked PDF binary DIRECTLY from object storage over a short-lived signed
+  URL (the storage origin declared in the widget CSP `connectDomains` in 1.1.0)
+  and draws true paginated pages — real page breaks, backgrounds, full-bleed — on
+  a canvas via pdf.js, identical to the app/public viewer and the downloaded
+  file. When the binary can't be fetched (Claude iOS ignores the widget CSP, or
+  none is baked yet) the widget shows an "Open in DocStash" message instead of the
+  old draft. No change to how a pdf is authored or to any tool's arguments.
+
+## [1.1.0] — 2026-09-21
+
+### Changed
+
+- **The widget now declares a Content-Security-Policy** so live html artifacts can
+  load external resources instead of being pinned to inlined bytes. Previously the
+  widget declared no CSP; external fonts and images were simply blocked. It now
+  declares an allowlist, split by purpose (plus ChatGPT's legacy `openai/widgetCSP`):
+  - `resourceDomains` (passive img/font/style/script) is broad, so LIVE html
+    artifacts can load their assets at render time: the sanctioned CDNs authors are
+    limited to (`fonts.googleapis.com`, `fonts.gstatic.com`, `cdnjs.cloudflare.com`,
+    `cdn.jsdelivr.net`) plus an `https://*` wildcard for arbitrary image hosts where
+    the host honors wildcard CSP.
+  - `connectDomains` (fetch/XHR — the exfiltration surface) stays TIGHT and EXACT:
+    only DocStash's own API origin plus the one object-storage origin (default store
+    `SUPABASE_URL`). No wildcard — a broad connect-src would let a doc's JS POST data
+    anywhere.
+  The CSP is ADDITIVE over the host sandbox baseline and best-effort: Claude honors
+  it on web only (iOS ignores all CSP — anthropics/claude-ai-mcp#40) and ChatGPT
+  keys off `openai/widgetCSP`, so blocked resources are still surfaced honestly
+  rather than depended on.
+
+## [0.8.0] — 2026-09-21
+
+### Added
+
+- **`screenshot_document` gains two cost controls.** `resolution` sets the width
+  in px of each returned page image (default 500 — enough to judge layout,
+  overflow, colour and composition, and far cheaper on tokens; raise to ~1000–1600
+  only to read fine print). `pages` takes an explicit 1-based set like `[2,5]` so,
+  after editing specific pages, the untouched ones never enter context.
+  `firstPage`/`lastPage` still select a contiguous range. Both size only the review
+  images the model sees — never the baked PDF, which stays full fidelity.
+
 ## [0.7.0] — 2026-09-21
 
 ### Changed

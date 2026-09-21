@@ -173,7 +173,7 @@
     },
     {
       "name": "screenshot_document",
-      "description": "SCREENSHOT a staged document by slug — the rendered result comes back AS IMAGES for your own review, plus the deterministic `errors`. Renders the latest pushed version and returns:\n  • `errors` — problems detected at render time. PDF: freeflow checks (content wider than the page can hold — an unbreakable string or too-wide table; a keep-whole block taller than one page; text buried under other text; a blank page mid-document; a broken image; a blank document). HTML/APP: viewport + runtime checks (horizontal blowout on desktop or mobile, missing viewport meta, broken images, a blank render, uncaught boot exceptions, missing bundle files, console errors). ALL advisory — nothing blocks a stash; fix them when iterating, never by stripping design.\n  • screenshots delivered to YOU as image content — PDF: one per page, up to 8 pages per call. A bare call serves pages 1-8; pass `firstPage`/`lastPage` to pick pages yourself (the user says \"pages 5-8 are broken\", or you want the next window of a longer doc). When the doc has more pages than one call ships, the result names the range sent (`pageRange`) — keep calling with new ranges until you have seen every page you need. Everything else: a bounded full-height shot at DESKTOP and at MOBILE (390px) — so you can SEE the result and catch what the checks cannot: hidden text, wrong colours, a broken visual layout.\n\nCall it after authoring or iterating a PDF, page, or app to check your work BEFORE telling the user it is ready — especially when a create tool reported errors. The images return to YOU (the model); they are NOT the user-facing inline widget.",
+      "description": "SCREENSHOT a staged document by slug — the rendered result comes back AS IMAGES for your own review, plus the deterministic `errors`. Renders the latest pushed version and returns:\n  • `errors` — problems detected at render time. PDF: freeflow checks (content wider than the page can hold — an unbreakable string or too-wide table; a keep-whole block taller than one page; text buried under other text; a blank page mid-document; a broken image; a blank document). HTML/APP: viewport + runtime checks (horizontal blowout on desktop or mobile, missing viewport meta, broken images, a blank render, uncaught boot exceptions, missing bundle files, console errors). ALL advisory — nothing blocks a stash; fix them when iterating, never by stripping design.\n  • screenshots delivered to YOU as image content — PDF: one image per page at `resolution` px wide (DEFAULT 500 — enough to judge layout / overflow / colour and cheap on tokens; raise to ~1000–1600 ONLY to read fine print), up to 8 pages per call. A bare call serves pages 1-8; pass `firstPage`/`lastPage` for a contiguous range, or `pages` for an EXPLICIT set like [2,5] so pages you did not touch never enter your context. When more pages remain than one call ships, the result names what shipped (`pageRange`) — call again for the rest. Everything else: a bounded full-height shot at DESKTOP and at MOBILE (390px) — so you can SEE the result and catch what the checks cannot: hidden text, wrong colours, a broken visual layout.\n\nCall it after authoring or iterating a PDF, page, or app to check your work BEFORE telling the user it is ready — especially when a create tool reported errors. The images return to YOU (the model); they are NOT the user-facing inline widget.",
       "annotations": {
         "title": "Screenshot document",
         "readOnlyHint": true,
@@ -196,6 +196,21 @@
             "type": "integer",
             "minimum": 1,
             "description": "PDF only, optional: 1-based last page of the explicit range (defaults to firstPage — a single page). At most 8 pages ship per call."
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maxItems": 8,
+            "description": "PDF only, optional: EXPLICIT 1-based page numbers to screenshot, e.g. [2,5] — a discontiguous set. Use this after editing specific pages so untouched pages never enter your context. Overrides firstPage/lastPage. Max 8."
+          },
+          "resolution": {
+            "type": "integer",
+            "minimum": 256,
+            "maximum": 1600,
+            "description": "PDF only, optional: width in px of each page image. DEFAULT 500 — enough to judge layout, overflow, colour, and composition, and cheap on tokens (image cost scales with area, and these screenshots are your biggest token cost). Raise it (≈1000–1600) ONLY when you must read fine print. Prefer the smallest resolution that answers your question."
           }
         },
         "required": [
