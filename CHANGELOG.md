@@ -12,6 +12,61 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [0.7.0] — 2026-09-21
+
+### Changed
+
+- **BREAKING — `create_pdf` / `edit_pdf` now take ONE continuous, freeflow HTML
+  document instead of hand-paginated page boxes.** You author semantic content
+  only (headings, paragraphs, tables, images, lists) with no page boxes and no
+  page-height math; DocStash's print engine paginates the flow automatically onto
+  US Letter (816×1056px, ~682px content width per page) at bake time. The
+  `content` argument is unchanged in name and type, but a doc built for the old
+  fixed-page model must be reauthored as a freeflow document, and flow content must
+  NEVER pin a height to the page (`100vh`, fixed sheets) — the engine owns
+  pagination.
+- **A PDF is a STATIC print document — no `<script>` / JS.** Any `<script>` is
+  rejected at create/edit time (JS never runs at bake). Draw every chart, diagram,
+  graphic, and signature motif as hand-authored inline SVG (+ CSS) — the contract
+  now directs the agent to visualize (bar / line / donut, timelines, stat panels,
+  iconography) this way rather than reaching for a scripting library.
+- **PDF page images + page count are now rendered from the baked binary**, not a
+  screen-media approximation, so `screenshot_document` and the reported page count
+  reflect true pagination (short pages, real `@page` margins, full-bleed).
+- **The engine trims a trailing all-blank page** a stray break can leave on the
+  tail of a document.
+
+### Added
+
+- **`pdf-canvas` — a FIXED one-page design surface.** `<section
+  class="pdf-canvas">` is exactly one sheet, edge-to-edge, and a positioning
+  context: absolutely-position art, full-page backgrounds, and edge-anchored
+  elements against KNOWN bounds, and compose it like a poster. Its content auto-fits
+  to one page at bake, so the agent designs ~a page without measuring height. This
+  is the primitive for the set-pieces that make a doc look designed — the cover,
+  section dividers, and full-page infographics / hero spreads — alongside the
+  flowing body.
+- **Opt-in pagination primitives.** An element with class `pdf-break` forces a new
+  page; `pdf-keep` keeps any card, stat box, figure, or callout whole (the print
+  engine never splits a `pdf-keep` box across a page boundary — a box that does not
+  fit the space left moves to the next page, the hook for the agent's own styled
+  `<div>` blocks, since real `<table>`/`<tr>`/`<figure>`/`<img>` are already kept
+  whole); and `<section class="pdf-bleed">` is a full-bleed page that still FLOWS —
+  it starts a new page, paints its background to all four edges, and fills the
+  sheet, but content longer than a page continues onto the next. The cover is just
+  the first `pdf-bleed` (or a `pdf-canvas`).
+- **Running header / footer via CSS `@page` margin boxes.** Put page numbers, a
+  title strip, or a small logo on every page in any edge or corner, filled with the
+  page counters (`counter(page)`, `counter(page) " / " counter(pages)`), a running
+  `string-set` section title, or a `position:running()` element. Cover, `pdf-canvas`,
+  and full-bleed pages are kept clear of it automatically.
+- **Two render checks on `create_pdf` / `edit_pdf` `errors`:** `oversized-block`
+  (a keep-whole box — `pdf-keep` / figure / image — taller than one page, so it
+  can't stay whole) and `blank-interior-page` (an empty page mid-document from a
+  stray break or an oversized element). Both are advisory warnings that never block
+  a stash. The render-time `errors` set otherwise narrows to the freeflow signals
+  (content too wide to paginate, a broken image, a blank document).
+
 ## [0.6.0] — 2026-09-16
 
 ### Changed
