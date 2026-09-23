@@ -12,6 +12,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [1.1.2] — 2026-09-23
+
+### Changed
+
+- **`create_pdf` — the freeflow break primitives are now documented as
+  ENGINE-RESERVED.** The description now states that `pdf-break` / `pdf-canvas` /
+  `pdf-keep` / `pdf-bleed` must be applied as bare classes and never redefined or
+  restyled (especially their `break-*` properties) — the engine owns those, and
+  overriding them corrupts pagination (blank pages, spillover). Style the content
+  INSIDE a primitive freely. Wording/clarity only; no change to any tool's
+  arguments. (The bake now enforces this — reserved-primitive rules are locked at
+  render time — and the render lint reports a `redefined-primitive` finding when an
+  author overrides one.
+
 ## [1.1.1] — 2026-09-21
 
 ### Changed
@@ -43,10 +57,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
     only DocStash's own API origin plus the one object-storage origin (default store
     `SUPABASE_URL`). No wildcard — a broad connect-src would let a doc's JS POST data
     anywhere.
-  The CSP is ADDITIVE over the host sandbox baseline and best-effort: Claude honors
-  it on web only (iOS ignores all CSP — anthropics/claude-ai-mcp#40) and ChatGPT
-  keys off `openai/widgetCSP`, so blocked resources are still surfaced honestly
-  rather than depended on.
+    The CSP is ADDITIVE over the host sandbox baseline and best-effort: Claude honors
+    it on web only (iOS ignores all CSP — anthropics/claude-ai-mcp#40) and ChatGPT
+    keys off `openai/widgetCSP`, so blocked resources are still surfaced honestly
+    rather than depended on.
 
 ## [0.8.0] — 2026-09-21
 
