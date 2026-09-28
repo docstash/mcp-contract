@@ -12,6 +12,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [1.1.4] — 2026-09-28
+
+### Changed
+
+- **`create_sheet` / `edit_sheet`: the SheetSpec now matches exactly what renders — in
+  BOTH the live preview and the downloaded .xlsx.** Everything the spec advertises is
+  wired end-to-end through the grid engine and the .xlsx writer:
+  - **Added / made real:** merged cells (`merges`), cell borders (`true` shortcut or
+    per-side `{style, color}`), strikethrough, font family, row heights, data validation
+    (dropdown lists + numeric/date bounds), autoFilter, and a wider set of number-format
+    categories (percent / currency $€¥ / date / time / datetime / plain number). Columns
+    also auto-fit to their content when no width is given.
+  - **Removed:** `charts` and conditional formatting. Both were silently dropped when
+    building the .xlsx (charts also only ever showed a placeholder in the preview) and
+    are beyond the grid engine, so the spec no longer promises them.
+
+## [1.1.3] — 2026-09-28
+
+### Fixed
+
+- **Corrected several inaccurate statements in the `instructions` and tool
+  descriptions** — wording/accuracy only, no change to any tool's name or arguments:
+  - The "show a doc to the user" pointers now name the real `show_*` tools
+    (`show_pdf` / `show_docx` / `show_sheet` / `show_page` / `show_text`), not a
+    non-existent `get_*`.
+  - Fixed the "matching create create tool" wording in the iteration-vs-new-doc rule.
+  - The slug-reuse warning is now accurate: reusing a **different-type** doc's slug is
+    rejected with `format_locked` ("create a new document instead"), and reusing a
+    **same-type** slug pushes a new version onto that existing doc — neither
+    "overwrites" the other doc.
+  - `discard` no longer claims "nothing was persisted"; it correctly states the unsaved
+    draft is moved to **Trash** (recoverable, can't be stashed unless restored).
+  - The app runtimes are described honestly: only `static` (HTML+CSS+JS, incl. the CDN
+    frameworks) actually runs in the browser; other `language` tokens
+    (`python` / `ruby` / `php` / …) are accepted but served as **source text**, not
+    executed. Removed the misleading `app.py` runnable-entry examples.
+
 ## [1.1.2] — 2026-09-23
 
 ### Changed
@@ -57,10 +94,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
     only DocStash's own API origin plus the one object-storage origin (default store
     `SUPABASE_URL`). No wildcard — a broad connect-src would let a doc's JS POST data
     anywhere.
-    The CSP is ADDITIVE over the host sandbox baseline and best-effort: Claude honors
-    it on web only (iOS ignores all CSP — anthropics/claude-ai-mcp#40) and ChatGPT
-    keys off `openai/widgetCSP`, so blocked resources are still surfaced honestly
-    rather than depended on.
+  The CSP is ADDITIVE over the host sandbox baseline and best-effort: Claude honors
+  it on web only (iOS ignores all CSP — anthropics/claude-ai-mcp#40) and ChatGPT
+  keys off `openai/widgetCSP`, so blocked resources are still surfaced honestly
+  rather than depended on.
 
 ## [0.8.0] — 2026-09-21
 

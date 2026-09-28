@@ -525,35 +525,26 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 XLSX SPEC SHAPE (when kind='xlsx'):
   { theme?: '<preset>' | { custom theme }, sheets: [ Sheet, ... ] }   — 1-20 sheets per workbook. A custom theme is a FLAT object (fields at top level, NOT nested under `custom`): { headerBackground, headerText, text, stripe, border, accent, font? }.
-  Sheet: { name, rows: Row[], columnWidths?: number[], rowHeights?: number[], frozenRows?: number, frozenCols?: number, merges?: string[], autoFilter?: string, conditionalFormats?: CF[], charts?: Chart[] }
+  Sheet: { name, rows: Row[], columnWidths?: number[], rowHeights?: (number|null)[], frozenRows?: number, frozenCols?: number, merges?: string[], autoFilter?: string }
     • name         — tab label, ≤31 chars; avoid [ ] : * ? / and \
     • rows         — top-to-bottom; each row is an array of cells (rows may be ragged — short rows pad empty on the right)
-    • columnWidths — left→right, Excel char-width units; omit to auto-fit
-    • rowHeights   — top→bottom, in points; omit/null an entry to keep default height
+    • columnWidths — left→right, Excel char-width units; omit to auto-fit each column to its content
+    • rowHeights   — top→bottom, in points; omit or null an entry to keep its default height
     • frozenRows / frozenCols — sticky header rows / label columns that stay visible while scrolling
-    • merges       — A1 ranges to merge, e.g. ['A1:D1','A2:A5']; top-left cell's value/format wins (great for spanning titles)
-    • autoFilter   — A1 range to attach Excel filter dropdowns, e.g. 'A1:F1' (header) or 'A1:F100' (whole block)
-    • conditionalFormats — declarative rules (heatmaps, bars, icons, threshold highlights); see CF below
-  Cell — a BARE value for the common case, or an OBJECT when you need a formula / formatting / comment:
+    • merges       — A1 ranges to merge, e.g. ['A1:D1','A2:A5']; the top-left cell's value/format wins (great for spanning titles)
+    • autoFilter   — A1 range for Excel sort/filter dropdowns, e.g. 'A1:F1' (header) or 'A1:F100' (whole block)
+  Cell — a BARE value for the common case, or an OBJECT when you need a formula / formatting / comment / validation:
     bare:   string | number | boolean | null
-    object: { value?, formula?, result?, format?, comment?, hyperlink?, validation? }
+    object: { value?, formula?, result?, format?, comment?, validation? }
       • formula   — Excel formula starting '=', e.g. '=SUM(B2:B10)', '=IF(A1>0,"yes","no")', cross-sheet '=Sheet2!B5*1.1' (overrides value)
       • result    — IMPORTANT cached formula value: ALWAYS supply the computed result alongside `formula`, else many viewers show the cell BLANK until they recalc. (You may instead pass `value` next to `formula` as the cache.)
-      • hyperlink — makes the cell a clickable link; its `value` is the display text
-      • validation — { type:'list'|'decimal'|'whole'|'date', values?, min?, max?, allowBlank?, prompt?, error? }; 'list'+values gives a dropdown
+      • comment   — a cell note (yellow triangle in Excel)
+      • validation — { type:'list'|'number'|'date', values?, min?, max? }; 'list'+values shows a dropdown, number/date enforce the [min,max] range
   format (CellFormat): { bold?, italic?, underline?, strikethrough?, color?, background?, fontFamily?, align?: 'left'|'center'|'right', valign?: 'top'|'middle'|'bottom', numberFormat?, fontSize?, wrapText?, border? }
     • color / background — hex '#RRGGBB' OR a theme token (color: 'text'|'accent';  background: 'headerBackground'|'stripe'|'accent')
-    • fontFamily   — per-cell font override (e.g. 'Arial','Courier New'); defaults to the theme font
-    • numberFormat — Excel format string: '#,##0' int · '#,##0.00' 2dp · '$#,##0' currency · '0.00%' percent · 'yyyy-mm-dd' date · '@' force-text
-    • border — per side { top?, right?, bottom?, left? }; each side is `true` (thin, theme color) OR { style?:'thin'|'medium'|'thick'|'double'|'dashed', color? }
-  CF (Sheet.conditionalFormats[]): { range:'B2:B100', type:'colorScale'|'dataBar'|'iconSet'|'cellIs'|'expression', ...rule }
-    • colorScale — colors?: 2-3 hex low→high (default red→yellow→green heatmap)
-    • dataBar    — color?: hex bar color (default theme accent)
-    • iconSet    — iconSet?: '3TrafficLights1'|'3Arrows'|'5Rating'|... (default '3TrafficLights1')
-    • cellIs     — operator:'greaterThan'|'lessThan'|'greaterThanOrEqual'|'lessThanOrEqual'|'equal'|'notEqual'|'between', value, value2?(for between), background?/fontColor?
-    • expression — formula:'$B2>$C2' (no leading '='), background?/fontColor? applied where TRUE
-  Chart (Sheet.charts[]): { type: 'bar'|'line'|'pie'|'area'|'scatter', title?, dataRange: 'A1:B10', categoriesRange?, position: { fromRow, fromCol, cols, rows } }  — rendered as a native Excel chart in the download.
-  CONVENTION — the FIRST row of each sheet is treated as the themed header. Put values/formulas as raw numbers (not pre-formatted strings) and let `numberFormat` style them, so totals/charts compute. For any `formula`, also pass its computed `result` so the workbook isn't blank on first open.
+    • numberFormat — matched to a category by what the string contains: '%' → percent, '$'/'€'/'¥' → currency, y+m+d → date, h/m/s → time, else plain number (thousands + decimals honored). Pass e.g. '0.00%', '$#,##0', 'yyyy-mm-dd', '#,##0.00'. (The category is preserved, not the exact custom code.)
+    • border — `true` for a thin box on all sides, OR per-side { all?, top?, bottom?, left?, right? } where each side is `true` (thin, theme color) or { style?:'thin'|'medium'|'thick'|'dashed'|'dotted'|'double', color? }
+  CONVENTION — the FIRST row of each sheet is treated as the themed header. Put values/formulas as raw numbers (not pre-formatted strings) and let `numberFormat` style them, so totals compute. For any `formula`, also pass its computed `result` so the workbook isn't blank on first open.
   Theme presets:
     • 'minimal' — Clean header bar (navy blue + white text), light gray stripes, sans-serif. Safe default for most data.
     • 'corporate' — Deep blue header, white text, subtle stripes, Calibri. Standard business workbook look.
@@ -602,8 +593,8 @@ Generate a LIVE WEB APP (a multi-file bundle) for DocStash and stage an UNSAVED 
 Deliver the finished app THROUGH this tool — DocStash hosts the bundle live at a shareable URL. Do NOT leave it as a local file/artifact or paste the files into the chat.
 
 Pass `files: { "path/to/file": "<contents>", ... }`; the MCP server zips in-memory and uploads as a bundle. YOU MUST declare:
-  - `entry`    — the file the runtime mounts (e.g. 'index.html' for a static site, 'app.py' for a python script).
-  - `language` — the RUNTIME token: 'static' (HTML+CSS+JS), 'python', 'ruby', 'php', 'lua', 'go', 'rust', 'cpp', 'java', etc.
+  - `entry`    — the file the runtime mounts (e.g. 'index.html' for a static site).
+  - `language` — the RUNTIME token. Today only 'static' (HTML+CSS+JS, incl. the CDN frameworks below) actually RUNS in the browser; other tokens ('python', 'ruby', 'php', 'lua', 'go', 'rust', …) are accepted but NOT executed — the entry file is served as SOURCE TEXT (displayed, not run) — so ship runnable apps as 'static'.
   - `framework` — declare this WHENEVER the bundle uses any of these (lower-case, exact token): 'react' / 'vue' / 'svelte' / 'solid' / 'preact' / 'angular' / 'lit' / 'htmx' / 'alpine' / 'qwik' / 'astro' / 'three' (THREE.js / 3D animations / WebGL scenes) / 'p5' (p5.js / generative art / creative-coding) / 'd3' (D3.js / data viz / charts) / 'jquery'. Pick ONE — the primary library the app is built around. Drives the dashboard card chip.
     Examples:
       - HTML page imports Three.js to render a rotating cube → framework: 'three'
@@ -648,7 +639,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
     },
     "entry": {
       "type": "string",
-      "description": "The entry file inside the bundle the runtime mounts (e.g. 'index.html', 'app.py'). Must be a path that exists in `files`."
+      "description": "The entry file inside the bundle the runtime mounts (e.g. 'index.html'). Must be a path that exists in `files`."
     },
     "language": {
       "type": "string",
@@ -1296,7 +1287,7 @@ STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVAT
 
 ## `discard`
 
-Discard a preview (from a create_* tool) without stashing it. Call this when the user rejects it (e.g. 'discard', 'never mind', 'don't save it'). Nothing was persisted; this invalidates the preview so it can no longer be stashed.
+Discard a preview (from a create_* tool) without stashing it. Call this when the user rejects it (e.g. 'discard', 'never mind', 'don't save it'). The unsaved draft is moved to Trash (recoverable from there), so it can no longer be stashed unless restored.
 
 **Hints:** `{"title":"Discard","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":false}`
 
