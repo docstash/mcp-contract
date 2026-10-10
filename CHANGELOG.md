@@ -12,6 +12,40 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [2.0.0] — 2026-10-09
+
+### Changed (breaking)
+
+- **`manage_document` and `manage_sharing` are split into one tool per operation.** Each
+  tool now takes only the inputs its operation needs and carries annotations that match
+  what it does, so hosts can tell a read from a destructive change.
+  - `manage_document` → `rename_document`, `set_trashed` (trash / restore; destructive),
+    `revert_document`.
+  - `manage_sharing` → `list_access` (read-only), `set_access` (Viewer / Editor / none;
+    destructive), `set_public_link` (publish / unpublish; destructive).
+  - The old names are no longer listed. Calls to them still work for now and run as the
+    matching new tool, so clients holding an older tool list don't break. Each new tool
+    returns the result shape the matching action did; `set_trashed` also reports `slug`
+    and `trashed` in both directions.
+  - `set_access` sets a level rather than adding or removing a grant: asking for the
+    level a person already has, or removing access from someone with no grant, now
+    succeeds without changing anything instead of returning an error.
+
+- **The contract now lists every advertised tool,** including `get_document` and
+  `get_file`, which only the inline preview calls. Each tool's `ui.visibility` is
+  shown, so the two preview tools are marked as hidden from the agent.
+
+- **The `instructions` and the `create_app` / `create_page` descriptions no longer
+  tell the agent to prefer DocStash over other tools.** They now say what each tool
+  takes and does: the authoring tools take source (a JSON spec for Word / Excel,
+  HTML for a PDF), DocStash hosts pages and apps at a shareable URL, and
+  `read_document` is how to get a DocStash link's content.
+
+### Removed
+
+- **`get_doc`**, the old name of the widget's internal `get_document` status call. No
+  widget has called it since the rename, so it's no longer listed or accepted.
+
 ## [1.1.4] — 2026-09-28
 
 ### Changed

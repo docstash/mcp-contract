@@ -3,18 +3,19 @@
 
 The tools the DocStash MCP server advertises to a connected agent, with the
 exact descriptions and input schemas the agent receives. Reads and mutations
-first, then the authoring tools.
+first, then the authoring tools, then the two tools only the inline preview
+calls.
 
 ---
 
 ## `list_documents`
 
-List the user's documents. By default returns ACTIVE docs in their default organization (team org if they have one, personal otherwise). Use `which` to switch lens:
-  • 'active'         — default. Docs the user owns or is an org member on. Has the user's own work.
+List the user's documents. By default returns ACTIVE docs in their default workspace (their team workspace if they have one, personal otherwise). Use `which` to switch lens:
+  • 'active'         — default. Docs the user owns or is a workspace member on. Has the user's own work.
   • 'trash'          — recently-trashed docs. Use when the user says "what did I delete" / "restore X" / "undelete".
-  • 'shared-with-me' — docs OTHER people shared with this user (cross-org grants).
+  • 'shared-with-me' — docs OTHER people shared with this user (grants from other workspaces).
 
-Returns slug, name, url, type, language, owner attribution, and latest-version summary for each. Use this to find an existing doc's `slug` before calling `read_document`, `manage_document`, `manage_sharing`, or an authoring tool.
+Returns slug, name, url, type, language, owner attribution, and latest-version summary for each. Use this to find an existing doc's `slug` before calling `read_document`, a sharing or lifecycle tool, or an authoring tool.
 
 **Hints:** `{"title":"List documents","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -176,7 +177,7 @@ Read a document's CONTENT into your context by slug — a SILENT read: NOTHING i
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
-Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by manage_document action='revert'). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_sheet / …) — it renders inline entirely off your context.
+Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by `revert_document`). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_sheet / …) — it renders inline entirely off your context.
 
 MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no single body). Pass `file` (a path from that list) to read ONE file's contents into `content` — then change it surgically with `edit_app` (same `file`).
 
@@ -267,13 +268,13 @@ Call it after authoring or iterating a PDF, page, or app to check your work BEFO
 
 ## `list_org_members`
 
-List members of the user's default organization — their names AND emails. Use this to figure out WHO TO SHARE WITH when the user says "share with the team" / "who's on this organization?" / "share with Alice" (and you need to resolve Alice → email).
+List members of the user's default workspace: their names AND emails. Use this to figure out WHO TO SHARE WITH when the user says "share with the team" / "who's in this workspace?" / "share with Alice" (and you need to resolve Alice → email).
 
-Returns nothing useful for a personal organization (just the user themselves). For team organizations returns the full member roster.
+Returns nothing useful for a personal workspace (just the user themselves). For team workspaces returns the full member roster.
 
-Use the emails returned here as the `email` argument to `manage_sharing` action='add'.
+Use the emails returned here as the `email` argument to `set_access`.
 
-**Hints:** `{"title":"List organization members","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"List workspace members","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -287,18 +288,11 @@ Use the emails returned here as the `email` argument to `manage_sharing` action=
 
 ---
 
-## `manage_document`
+## `rename_document`
 
-Doc-level actions other than upload. Pass the `slug` plus an `action`:
+Change a doc's name. Metadata only: no new version is created. Use when the user says "rename X to Y".
 
-  • 'rename'  — change the doc's name. Requires `name`. No new version minted (metadata only). Use when the user says "rename X to Y".
-  • 'trash'   — soft-delete. Doc disappears from active list, shows up in `list_documents` with which='trash'. RECOVERABLE — don't tell the user it's permanently gone.
-  • 'restore' — un-trash. Mirror of 'trash'. Find the slug via `list_documents` with which='trash'.
-  • 'revert'  — repoint the doc at an EARLIER artifact. Requires `artifactId` (get it from `read_document` with withHistory:true — each content_pushed event carries `payload.artifactId`). No bytes move; the server bumps that artifact's refCount and logs a content_pushed event. History stays intact.
-
-For UPLOADING content (create a new doc, push a new version), use the separate `stash` tool — NOT this one.
-
-**Hints:** `{"title":"Manage document","readOnlyHint":false,"destructiveHint":true,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Rename document","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
 
 ### Input schema
 
@@ -310,28 +304,14 @@ For UPLOADING content (create a new doc, push a new version), use the separate `
       "type": "string",
       "description": "The doc's 6-char slug."
     },
-    "action": {
-      "type": "string",
-      "enum": [
-        "rename",
-        "trash",
-        "restore",
-        "revert"
-      ],
-      "description": "Which action to perform on the doc."
-    },
     "name": {
       "type": "string",
-      "description": "Required when action='rename'. The new name (up to 200 chars)."
-    },
-    "artifactId": {
-      "type": "string",
-      "description": "Required when action='revert'. The full id of the artifact to revert to (from `read_document` with withHistory:true)."
+      "description": "The new name (up to 200 chars)."
     }
   },
   "required": [
     "slug",
-    "action"
+    "name"
   ],
   "additionalProperties": true
 }
@@ -339,18 +319,11 @@ For UPLOADING content (create a new doc, push a new version), use the separate `
 
 ---
 
-## `manage_sharing`
+## `set_trashed`
 
-Share AND PUBLISH a doc — this is the ONLY tool that makes a doc public. Use it to PUBLISH / make public / get a public shareable link (action='set-public', isPublic=true), and to grant/revoke per-user access. Pass `slug` + `action`:
+Move a doc to the trash (`trashed: true`) or restore it from the trash (`trashed: false`). Trash is RECOVERABLE: a trashed doc leaves the active list, appears in `list_documents` with which='trash', and comes back with `trashed: false`. Don't tell the user it's permanently gone.
 
-  • 'list'        — list all per-user grants (Viewers + Editors). Does NOT include public-link state (use `read_document` for that — it's on `document.isPublic`).
-  • 'add'         — grant a specific person access. Requires `email`. Optional `level: 'read' | 'write'` (default 'read'). The recipient must be a DocStash user (sign in once at app.docstash.ai). NOT a public link.
-  • 'revoke'      — revoke a per-user grant by `email`. Mirror of 'add'.
-  • 'set-public'  — PUBLISH / unpublish the doc: toggle its PUBLIC LINK. Requires `isPublic: boolean`. true = PUBLISH — anyone with the URL sees the latest version (anonymous, no sign-in); false = revoke the public link. This is the ONLY way to make a doc publicly viewable — a bare stashed url stays private. The doc must be saved (stashed) first; you can't publish an unsaved version. Per-doc only — no version-pinned public links.
-
-Call this when the user explicitly asks to PUBLISH, make public, get a public/shareable link, or share/revoke per-user access. Don't infer sharing from vague phrasing like "can you give Alice access" without checking what level they want.
-
-**Hints:** `{"title":"Manage sharing","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
+**Hints:** `{"title":"Trash or restore document","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":false}`
 
 ### Input schema
 
@@ -362,36 +335,143 @@ Call this when the user explicitly asks to PUBLISH, make public, get a public/sh
       "type": "string",
       "description": "The doc's 6-char slug."
     },
-    "action": {
+    "trashed": {
+      "type": "boolean",
+      "description": "true = move to trash; false = restore from trash."
+    }
+  },
+  "required": [
+    "slug",
+    "trashed"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `revert_document`
+
+Make an EARLIER version the doc's current version again. Get the version's `artifactId` from `read_document` with withHistory:true (each content_pushed event carries `payload.artifactId`). No content is lost: the revert is logged as a new event and the full history stays intact.
+
+**Hints:** `{"title":"Revert document to an earlier version","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
       "type": "string",
-      "enum": [
-        "list",
-        "add",
-        "revoke",
-        "set-public"
-      ],
-      "description": "Which share operation."
+      "description": "The doc's 6-char slug."
+    },
+    "artifactId": {
+      "type": "string",
+      "description": "The full id of the version to revert to (from `read_document` with withHistory:true)."
+    }
+  },
+  "required": [
+    "slug",
+    "artifactId"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `list_access`
+
+List the people granted access to a doc (Viewers and Editors). Does NOT include public-link state: that's `document.isPublic` on `read_document`.
+
+**Hints:** `{"title":"List who has access","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The doc's 6-char slug."
+    }
+  },
+  "required": [
+    "slug"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `set_access`
+
+Set one person's access to a doc: 'read' (Viewer), 'write' (Editor: can push new versions), or 'none' (remove their access). Also changes an existing Viewer to Editor or back. The person must be a DocStash user (they sign in once at app.docstash.ai) and signs in to open the doc: this is NOT a public link. Resolve a name to an email with `list_org_members`. If the user didn't say whether the person may edit, ask before setting 'write'.
+
+**Hints:** `{"title":"Set a person's access","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The doc's 6-char slug."
     },
     "email": {
       "type": "string",
-      "description": "Required when action='add' or 'revoke'. The grantee's email."
+      "description": "The person's email."
     },
     "level": {
       "type": "string",
       "enum": [
         "read",
-        "write"
+        "write",
+        "none"
       ],
-      "description": "Optional, only meaningful when action='add'. 'read' (Viewer) or 'write' (Editor). Default 'read'."
-    },
-    "isPublic": {
-      "type": "boolean",
-      "description": "Required when action='set-public'. true = enable public link; false = revoke."
+      "description": "'read' = Viewer, 'write' = Editor, 'none' = remove access."
     }
   },
   "required": [
     "slug",
-    "action"
+    "email",
+    "level"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `set_public_link`
+
+PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published, anyone with the URL sees the latest saved version without signing in; this is the ONLY way to make a doc publicly viewable, and a stashed url stays private. The doc must be saved (stashed) before publishing. Unpublishing cuts off everyone using the public URL; people granted access and workspace members keep access. Returns the public docstash.ai `url` when published. Call only when the user explicitly asks to publish / make public / get a public or shareable link, or to unpublish.
+
+**Hints:** `{"title":"Publish or unpublish document","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":true}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The doc's 6-char slug."
+    },
+    "isPublic": {
+      "type": "boolean",
+      "description": "true = publish (public link on); false = unpublish (public link off)."
+    }
+  },
+  "required": [
+    "slug",
+    "isPublic"
   ],
   "additionalProperties": true
 }
@@ -590,7 +670,7 @@ XLSX SPEC SHAPE (when kind='xlsx'):
 ## `create_app`
 
 Generate a LIVE WEB APP (a multi-file bundle) for DocStash and stage an UNSAVED VERSION the user reviews at a docstash.ai link. Use this ONLY when you're genuinely shipping MULTIPLE files (e.g. index.html + a separate app.js + styles.css + local assets). For a single self-contained page, use `create_page` instead — it has no bundle, so it can't fail on a missing local file.
-Deliver the finished app THROUGH this tool — DocStash hosts the bundle live at a shareable URL. Do NOT leave it as a local file/artifact or paste the files into the chat.
+DocStash hosts the bundle live at a shareable URL.
 
 Pass `files: { "path/to/file": "<contents>", ... }`; the MCP server zips in-memory and uploads as a bundle. YOU MUST declare:
   - `entry`    — the file the runtime mounts (e.g. 'index.html' for a static site).
@@ -664,7 +744,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 ## `create_page`
 
 Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
-Deliver the finished page THROUGH this tool — DocStash hosts it live at a shareable URL. Do NOT leave it as a local file/artifact or hand back raw HTML in the chat. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
+DocStash hosts it live at a shareable URL. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
 ROUTING: ONE self-contained page → this tool, NOT `create_app` (a single file structurally can't have broken local references; use create_app only for genuinely MULTI-FILE bundles). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`; an editable Word doc → `create_docx`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
@@ -1253,7 +1333,7 @@ The DEFAULT way to change a multi-file app — edit it in place, or copy it into
 
 ## `stash`
 
-STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVATE. The `slug` IS the doc's slug (creates it, or pushes a new version if the preview targeted an existing doc). ‼️ Do NOT call this automatically after a create_* call — a plain 'create X' request is satisfied by the preview alone. Call it ONLY when the user signals saving (save / stash / ship it / looks good) or clicks Stash in the inline preview; when in doubt, ask first. Returns the `url`. Stashing does NOT publish — to make it public, then call `manage_sharing` action='set-public'.
+STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVATE. The `slug` IS the doc's slug (creates it, or pushes a new version if the preview targeted an existing doc). ‼️ Do NOT call this automatically after a create_* call — a plain 'create X' request is satisfied by the preview alone. Call it ONLY when the user signals saving (save / stash / ship it / looks good) or clicks Stash in the inline preview; when in doubt, ask first. Returns the `url`. Stashing does NOT publish — to make it public, then call `set_public_link` with isPublic: true.
 
 **Hints:** `{"title":"Stash","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
 
@@ -1313,9 +1393,9 @@ Discard a preview (from a create_* tool) without stashing it. Call this when the
 
 ## `get_organizations`
 
-List the organizations (personal + team) the user can save documents to, with the currently-active one flagged. Call this to resolve a spoken name like "my team organization" to its id before set_organization.
+List the workspaces (personal + team; ids and tool names call them organizations) the user can save documents to, with the currently-active one flagged. Call this to resolve a spoken name like "my team workspace" to its id before set_organization. Call them workspaces when talking to the user.
 
-**Hints:** `{"title":"Get organizations","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Get workspaces","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
 ### Input schema
 
@@ -1331,9 +1411,9 @@ List the organizations (personal + team) the user can save documents to, with th
 
 ## `set_organization`
 
-Switch the active organization that NEW documents are created in, by organizationId (from get_organizations). Persists for this connection until changed. Existing documents remain reachable by slug regardless of the active organization.
+Switch the active workspace that NEW documents are created in, by organizationId (from get_organizations). Persists for this connection until changed. Existing documents remain reachable by slug regardless of the active workspace.
 
-**Hints:** `{"title":"Set organization","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
+**Hints:** `{"title":"Switch workspace","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
 
 ### Input schema
 
@@ -1343,11 +1423,75 @@ Switch the active organization that NEW documents are created in, by organizatio
   "properties": {
     "organizationId": {
       "type": "string",
-      "description": "The organization id from get_organizations."
+      "description": "The workspace id (organizationId) from get_organizations."
     }
   },
   "required": [
     "organizationId"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `get_document`
+
+Internal widget poll — the latest details for a preview (its current name + this version's status). Not for direct agent use.
+
+**Called by the inline preview only** (`ui.visibility: ["app"]`): hidden from the agent.
+
+**Hints:** `{"title":"Get document status","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The slug returned by a preview tool."
+    },
+    "artifactId": {
+      "type": "string",
+      "description": "Internal — the artifact id the widget rendered, so status answers for THAT version (not the slug’s latest)."
+    }
+  },
+  "required": [
+    "slug"
+  ],
+  "additionalProperties": true
+}
+```
+
+---
+
+## `get_file`
+
+Internal — the inline preview widget fetches its own document bytes here. Not for direct agent use.
+
+**Called by the inline preview only** (`ui.visibility: ["app"]`): hidden from the agent.
+
+**Hints:** `{"title":"Get document bytes","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The slug returned by a preview tool."
+    },
+    "artifactId": {
+      "type": "string",
+      "description": "Internal — the artifact id the widget rendered, so bytes are for THAT version."
+    }
+  },
+  "required": [
+    "slug"
   ],
   "additionalProperties": true
 }

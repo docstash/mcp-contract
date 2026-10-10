@@ -13,5 +13,7 @@ built — it is generated from the DocStash source and mirrored here as text.
 - [`RESULTS.md`](./RESULTS.md) — what each tool returns to the agent, per scenario.
 - [`CHANGELOG.md`](./CHANGELOG.md) — version history of the contract.
 
-Widget-internal tools (the preview bridge) are omitted — they are plumbing the
-model never calls, not part of the authoring contract.
+Two tools, `get_document` and `get_file`, are called only by the inline preview
+shown in the chat: it uses them to check a document's status and load its
+contents. They're marked `ui.visibility: ["app"]`, so hosts hide them from the
+agent, but they're listed here because `tools/list` advertises them.
