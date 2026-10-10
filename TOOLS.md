@@ -45,7 +45,7 @@ Returns slug, name, url, type, language, owner attribution, and latest-version s
 
 DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_pdf` shows only a PDF; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show PDF","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show PDF","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -71,7 +71,7 @@ DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go 
 
 DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_docx` shows only a Word (.docx) doc; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show Word doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show Word doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -97,7 +97,7 @@ DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your conte
 
 DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_sheet` shows only a spreadsheet; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show spreadsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show spreadsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -123,7 +123,7 @@ DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (b
 
 DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_page` shows only a web page; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show web page","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show web page","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -149,7 +149,7 @@ DISPLAY a web page to the user inline by slug — renders OFF your context (byte
 
 DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown / text / code doc; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show text or code","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Show text or code","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -219,7 +219,7 @@ SCREENSHOT a staged document by slug — the rendered result comes back AS IMAGE
 
 Call it after authoring or iterating a PDF, page, or app to check your work BEFORE telling the user it is ready — especially when a create tool reported errors. The images return to YOU (the model); they are NOT the user-facing inline widget.
 
-**Hints:** `{"title":"Screenshot document","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Screenshot document","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -503,7 +503,7 @@ DESIGN THE DOCUMENT:
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
-**Hints:** `{"title":"Create PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -563,7 +563,7 @@ Block = one of:
 content = a string, a run, or a list of either.
 Run = { text, bold?, italic?, underline?, strike?, code?, color?(hex), highlight?, font?, size?(pt), link?(url), superscript?, subscript? }.
 
-**Hints:** `{"title":"Create Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -633,7 +633,7 @@ XLSX SPEC SHAPE (when kind='xlsx'):
     • 'minimal_dark' — Dark slate background throughout, light text, subtle border. Dark-mode tables.
   Minimal example (JSON.stringify this): {"theme":"finance","sheets":[{"name":"Q3","frozenRows":1,"rows":[["Item","Revenue"],["Subscriptions",{"value":42000,"format":{"numberFormat":"$#,##0"}}],["Total",{"formula":"=SUM(B2:B2)","format":{"bold":true,"numberFormat":"$#,##0"}}]]}]}
 
-**Hints:** `{"title":"Create spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -690,7 +690,7 @@ RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name=
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the unsaved version and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
-**Hints:** `{"title":"Create web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -751,7 +751,7 @@ RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name=
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
-**Hints:** `{"title":"Create web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -794,7 +794,7 @@ ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE re
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
-**Hints:** `{"title":"Create text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Create text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -856,7 +856,7 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
-**Hints:** `{"title":"Edit PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -931,7 +931,7 @@ The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it in
 - To ADD structure, use `appendBlocks` (Block[] onto the body; optional `after` text anchor to place it) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
 
 
-**Hints:** `{"title":"Edit Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -1016,7 +1016,7 @@ The DEFAULT way to change a spreadsheet — edit it in place, or copy it into a 
 - To ADD structure, use `addSheet` (a whole new sheet) or `addRows` (rows onto an existing sheet) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
 
 
-**Hints:** `{"title":"Edit spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -1117,7 +1117,7 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
-**Hints:** `{"title":"Edit web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -1190,7 +1190,7 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 - **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
-**Hints:** `{"title":"Edit text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -1264,7 +1264,7 @@ The DEFAULT way to change a multi-file app — edit it in place, or copy it into
 - Each edit names the `file` in the bundle to change; the str_replace applies within that file. Never re-emit a whole multi-file bundle for a small change. `read_document` with a `file` argument returns one file's current contents (a bare `read_document` lists the bundle's files).
 
 
-**Hints:** `{"title":"Edit web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":false}`
+**Hints:** `{"title":"Edit web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -1335,7 +1335,7 @@ The DEFAULT way to change a multi-file app — edit it in place, or copy it into
 
 STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVATE. The `slug` IS the doc's slug (creates it, or pushes a new version if the preview targeted an existing doc). ‼️ Do NOT call this automatically after a create_* call — a plain 'create X' request is satisfied by the preview alone. Call it ONLY when the user signals saving (save / stash / ship it / looks good) or clicks Stash in the inline preview; when in doubt, ask first. Returns the `url`. Stashing does NOT publish — to make it public, then call `set_public_link` with isPublic: true.
 
-**Hints:** `{"title":"Stash","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
+**Hints:** `{"title":"Stash","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":true}`
 
 ### Input schema
 

@@ -12,6 +12,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [2.0.1] — 2026-10-10
+
+### Changed
+
+- **`openWorldHint` is now `true` on every tool that renders a document:** the `create_*`
+  and `edit_*` tools, the `show_*` tools, `screenshot_document` and `stash`. Rendering
+  loads the document's own fonts, images and scripts from whatever third-party hosts
+  it references. No change to any tool's name, arguments or behavior.
+
 ## [2.0.0] — 2026-10-09
 
 ### Changed (breaking)

@@ -32,7 +32,7 @@
         "title": "Show PDF",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -55,7 +55,7 @@
         "title": "Show Word doc",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -78,7 +78,7 @@
         "title": "Show spreadsheet",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -101,7 +101,7 @@
         "title": "Show web page",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -124,7 +124,7 @@
         "title": "Show text or code",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -178,7 +178,7 @@
         "title": "Screenshot document",
         "readOnlyHint": true,
         "destructiveHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -420,7 +420,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -456,7 +456,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -492,7 +492,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -528,7 +528,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -581,7 +581,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -617,7 +617,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -670,7 +670,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -734,7 +734,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -808,7 +808,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -900,7 +900,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -964,7 +964,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -1028,7 +1028,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": false,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
@@ -1097,7 +1097,7 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": true
       },
       "inputSchema": {
         "type": "object",
