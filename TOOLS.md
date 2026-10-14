@@ -173,7 +173,7 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 
 ## `read_document`
 
-Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_docx / edit_sheet / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug; for a docx or sheet, match the VISIBLE text/value and DocStash handles the JSON escaping).
+Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug). Word and spreadsheet docs are view-only: read them, but they take no edits or new versions.
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
@@ -481,7 +481,7 @@ PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published,
 
 ## `create_pdf`
 
-Generate a beautiful, print-ready PDF document for DocStash and show the user an INLINE PREVIEW: reports, memos, proposals, letters, résumés, whitepapers, contracts, essays, one-pagers. THIS IS THE DEFAULT for a generic 'make me a document' / 'make me a PDF' request (use `create_docx` only when the user specifically wants an editable WORD doc, `create_text` for markdown/code source, `create_page` for a web page). `content` = HTML you author, and DocStash renders + presents it AS A PDF (paginated paper, page nav, zoom, one-click PDF download). Do NOT generate a binary .pdf; the user drag-and-drops pre-existing .pdf files on the dashboard.
+Generate a beautiful, print-ready PDF document for DocStash and show the user an INLINE PREVIEW: reports, memos, proposals, letters, résumés, whitepapers, contracts, essays, one-pagers. THIS IS THE DEFAULT for a generic 'make me a document' / 'make me a PDF' request (use `create_text` for markdown/code source, `create_page` for a web page). `content` = HTML you author, and DocStash renders + presents it AS A PDF (paginated paper, page nav, zoom, one-click PDF download). Do NOT generate a binary .pdf; the user drag-and-drops pre-existing .pdf files on the dashboard.
 
 This is a REAL HTML/CSS document rendered by a full Chromium engine and baked to PDF — you have the SAME visual toolkit a web page has (any CSS layout, SVG, gradients, filters, transforms, web fonts, images), NOT a limited document format. It is a STATIC print document: NO `<script>` / JS runs (it is rejected) — draw every chart, diagram and graphic as hand-authored inline SVG + CSS (crisp, and how the best docs are built). The ONLY difference from a live web page is GEOMETRY: it prints onto fixed US Letter pages that never scroll or reflow.
 
@@ -526,136 +526,6 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
     "content": {
       "type": "string",
       "description": "One continuous, top-to-bottom HTML document you author and design; DocStash flows it across US Letter pages and paginates for you. Build designed set-pieces (cover, dividers, full-page infographics) as `<section class=\"pdf-canvas\">` — a FIXED one-page canvas where absolute positioning + full-bleed backgrounds are safe and content auto-fits the page — and let running text FLOW. `pdf-break` forces a page, `pdf-keep` keeps a block whole, `pdf-bleed` is a flowing full-bleed section; theme every page via `@page{background:…}`. Draw charts/graphics as inline SVG (static print doc — no JS). DocStash presents it as a real PDF."
-    }
-  },
-  "required": [
-    "content"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `create_docx`
-
-Generate an EDITABLE Word document (.docx) for DocStash and show the user an INLINE PREVIEW. Use this when the user specifically wants a WORD doc / editable .docx; for a DESIGNED, print-perfect document use `create_pdf` instead. `content` = JSON.stringify(DocxSpec) — the browser mints a real .docx from it at view/download time. Do NOT generate a binary. Spec schema below.
-The spec expresses real Word fidelity: document font, named styles, page setup (size / orientation / margins / columns), headers & footers, a generated table of contents, per-run fonts / colors / sizes, and tables with merged / shaded cells. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA).
-
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
-
-DOCX SPEC SHAPE — content = JSON.stringify(DocxSpec):
-{
-  title?, defaults?: { font?, size?(pt), color?(hex), lineSpacing? },
-  page?: { size?: 'A4'|'Letter'|'Legal', orientation?: 'portrait'|'landscape', margins?: {top,right,bottom,left}(inches), columns? },
-  header?: { content, align? }, footer?: { content, align? },   // OMIT both unless the user explicitly asks for a running header/footer — do NOT auto-add a title or tagline band; a bare document has none
-  toc?: true | { title?, maxLevel? },   // generated table of contents
-  styles?: [{ id, name?, font?, size?, color?, bold?, italic?, align?, spacing? }],   // reusable named paragraph styles
-  body: Block[]
-}
-Block = one of:
-  { type:"heading", level:1-6, content, align? }
-  { type:"paragraph", content, align?, style?, spacing?:{before,after,line}, indent?:{left,firstLine,hanging} }
-  { type:"list", ordered?, items:[{ content, level? }] }
-  { type:"table", rows:[{ cells:[{ content, colSpan?, rowSpan?, align?, valign?, shading?(hex), bold? }], header? }], widths?(% per column), align?, cellPadding?(in), borderColor?(hex), borderWidth?(pt), banded?, borders? }
-  { type:"image", src(DIRECT image URL), alt?, width?, height?, align? }
-  { type:"quote", content } | { type:"code", text, language? } | { type:"divider" } | { type:"pageBreak" } | { type:"toc", title?, maxLevel? }
-content = a string, a run, or a list of either.
-Run = { text, bold?, italic?, underline?, strike?, code?, color?(hex), highlight?, font?, size?(pt), link?(url), superscript?, subscript? }.
-
-**Hints:** `{"title":"Create Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
-    },
-    "slug": {
-      "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
-    },
-    "description": {
-      "type": "string",
-      "description": "One-line commit-style changelog for THIS version (≤~8 words — the CHANGE, not the whole doc), e.g. \"Add Q3 revenue table\". Set it on every call; it becomes the version-history entry."
-    },
-    "content": {
-      "type": "string",
-      "description": "JSON.stringify(DocxSpec). See the DOCX SPEC SHAPE in this tool description."
-    }
-  },
-  "required": [
-    "content"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `create_sheet`
-
-Generate a SPREADSHEET / WORKBOOK (Excel) for DocStash and show the user an INLINE PREVIEW. `content` = JSON.stringify(SheetSpec) — do NOT generate an .xlsx binary; the browser renders real Excel at view time. Spec schema below.
-
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
-
-XLSX SPEC SHAPE (when kind='xlsx'):
-  { theme?: '<preset>' | { custom theme }, sheets: [ Sheet, ... ] }   — 1-20 sheets per workbook. A custom theme is a FLAT object (fields at top level, NOT nested under `custom`): { headerBackground, headerText, text, stripe, border, accent, font? }.
-  Sheet: { name, rows: Row[], columnWidths?: number[], rowHeights?: (number|null)[], frozenRows?: number, frozenCols?: number, merges?: string[], autoFilter?: string }
-    • name         — tab label, ≤31 chars; avoid [ ] : * ? / and \
-    • rows         — top-to-bottom; each row is an array of cells (rows may be ragged — short rows pad empty on the right)
-    • columnWidths — left→right, Excel char-width units; omit to auto-fit each column to its content
-    • rowHeights   — top→bottom, in points; omit or null an entry to keep its default height
-    • frozenRows / frozenCols — sticky header rows / label columns that stay visible while scrolling
-    • merges       — A1 ranges to merge, e.g. ['A1:D1','A2:A5']; the top-left cell's value/format wins (great for spanning titles)
-    • autoFilter   — A1 range for Excel sort/filter dropdowns, e.g. 'A1:F1' (header) or 'A1:F100' (whole block)
-  Cell — a BARE value for the common case, or an OBJECT when you need a formula / formatting / comment / validation:
-    bare:   string | number | boolean | null
-    object: { value?, formula?, result?, format?, comment?, validation? }
-      • formula   — Excel formula starting '=', e.g. '=SUM(B2:B10)', '=IF(A1>0,"yes","no")', cross-sheet '=Sheet2!B5*1.1' (overrides value)
-      • result    — IMPORTANT cached formula value: ALWAYS supply the computed result alongside `formula`, else many viewers show the cell BLANK until they recalc. (You may instead pass `value` next to `formula` as the cache.)
-      • comment   — a cell note (yellow triangle in Excel)
-      • validation — { type:'list'|'number'|'date', values?, min?, max? }; 'list'+values shows a dropdown, number/date enforce the [min,max] range
-  format (CellFormat): { bold?, italic?, underline?, strikethrough?, color?, background?, fontFamily?, align?: 'left'|'center'|'right', valign?: 'top'|'middle'|'bottom', numberFormat?, fontSize?, wrapText?, border? }
-    • color / background — hex '#RRGGBB' OR a theme token (color: 'text'|'accent';  background: 'headerBackground'|'stripe'|'accent')
-    • numberFormat — matched to a category by what the string contains: '%' → percent, '$'/'€'/'¥' → currency, y+m+d → date, h/m/s → time, else plain number (thousands + decimals honored). Pass e.g. '0.00%', '$#,##0', 'yyyy-mm-dd', '#,##0.00'. (The category is preserved, not the exact custom code.)
-    • border — `true` for a thin box on all sides, OR per-side { all?, top?, bottom?, left?, right? } where each side is `true` (thin, theme color) or { style?:'thin'|'medium'|'thick'|'dashed'|'dotted'|'double', color? }
-  CONVENTION — the FIRST row of each sheet is treated as the themed header. Put values/formulas as raw numbers (not pre-formatted strings) and let `numberFormat` style them, so totals compute. For any `formula`, also pass its computed `result` so the workbook isn't blank on first open.
-  Theme presets:
-    • 'minimal' — Clean header bar (navy blue + white text), light gray stripes, sans-serif. Safe default for most data.
-    • 'corporate' — Deep blue header, white text, subtle stripes, Calibri. Standard business workbook look.
-    • 'finance' — Dark green header (currency-feel), white text, no stripes, Calibri. Financial models / accounting.
-    • 'research' — Charcoal header, off-white text, off-white stripes, Helvetica narrow. Academic / data-research vibe.
-    • 'minimal_dark' — Dark slate background throughout, light text, subtle border. Dark-mode tables.
-  Minimal example (JSON.stringify this): {"theme":"finance","sheets":[{"name":"Q3","frozenRows":1,"rows":[["Item","Revenue"],["Subscriptions",{"value":42000,"format":{"numberFormat":"$#,##0"}}],["Total",{"formula":"=SUM(B2:B2)","format":{"bold":true,"numberFormat":"$#,##0"}}]]}]}
-
-**Hints:** `{"title":"Create spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
-    },
-    "slug": {
-      "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
-    },
-    "description": {
-      "type": "string",
-      "description": "One-line commit-style changelog for THIS version (≤~8 words — the CHANGE, not the whole doc), e.g. \"Add Q3 revenue table\". Set it on every call; it becomes the version-history entry."
-    },
-    "content": {
-      "type": "string",
-      "description": "JSON.stringify(SheetSpec). See the SHEET SPEC SHAPE in this tool description."
     }
   },
   "required": [
@@ -745,7 +615,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
 DocStash hosts it live at a shareable URL. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
-ROUTING: ONE self-contained page → this tool, NOT `create_app` (a single file structurally can't have broken local references; use create_app only for genuinely MULTI-FILE bundles). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`; an editable Word doc → `create_docx`.
+ROUTING: ONE self-contained page → this tool, NOT `create_app` (a single file structurally can't have broken local references; use create_app only for genuinely MULTI-FILE bundles). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
@@ -790,7 +660,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 Generate an INERT text artifact — markdown, source code, or raw data — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS AS SOURCE (typography for markdown, syntax highlighting for code), never executed or rendered as a page. Pick `type`:
   • 'md'   — markdown. Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind.
   • 'text' — source code / data in ~30 formats. Content = the raw source string. Set `language` to the canonical token (python / typescript / go / rust / json / yaml / csv / sql / etc.).
-ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`; an editable Word doc → `create_docx`. A spreadsheet with real cells/formulas → `create_sheet` (raw CSV data stays here).
+ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
@@ -911,194 +781,6 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
   "required": [
     "slug",
     "edits"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `edit_docx`
-
-The DEFAULT way to change a Word (.docx) doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_docx` edits only a Word (.docx) doc; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
-
-- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
-- `new_string` replaces it; an empty string deletes the matched text.
-- Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
-- This doc is a JSON spec. For a VALUE change (a run's text, a heading, a cell, a hex color), match `old_string` on the VISIBLE text/value — NOT the raw JSON; you never escape quotes or backslashes, DocStash handles the JSON and re-validates.
-- To ADD structure, use `appendBlocks` (Block[] onto the body; optional `after` text anchor to place it) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
-
-
-**Hints:** `{"title":"Edit Word doc","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "slug": {
-      "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
-    },
-    "copy": {
-      "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
-    },
-    "name": {
-      "type": "string",
-      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
-    },
-    "edits": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "old_string": {
-            "type": "string",
-            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
-          },
-          "new_string": {
-            "type": "string",
-            "description": "The replacement text. An empty string deletes the matched text."
-          },
-          "replaceAll": {
-            "type": "boolean",
-            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
-          }
-        },
-        "required": [
-          "old_string",
-          "new_string"
-        ],
-        "additionalProperties": false
-      },
-      "description": "Ordered surgical VALUE edits; each applies to the result of the previous. Optional when using a structural append op."
-    },
-    "appendBlocks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": {}
-      },
-      "description": "STRUCTURAL add: Block[] appended to the document body (same block shapes as create_docx — heading / paragraph / table / list / image / …). Use to ADD content that old_string/new_string cannot."
-    },
-    "after": {
-      "type": "string",
-      "description": "Insert `appendBlocks` immediately AFTER the block whose VISIBLE text contains this string (e.g. a heading). Omit to append at the end of the doc."
-    },
-    "description": {
-      "type": "string",
-      "description": "Optional one-line summary of the change, recorded on the new version."
-    }
-  },
-  "required": [
-    "slug"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `edit_sheet`
-
-The DEFAULT way to change a spreadsheet — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_sheet` edits only a spreadsheet; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
-
-- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
-- `new_string` replaces it; an empty string deletes the matched text.
-- Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
-- This doc is a JSON spec. For a VALUE change (a run's text, a heading, a cell, a hex color), match `old_string` on the VISIBLE text/value — NOT the raw JSON; you never escape quotes or backslashes, DocStash handles the JSON and re-validates.
-- To ADD structure, use `addSheet` (a whole new sheet) or `addRows` (rows onto an existing sheet) — no re-emit needed. Only a near-total rewrite, a reorder, or a removal re-emits via the create tool.
-
-
-**Hints:** `{"title":"Edit spreadsheet","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "slug": {
-      "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
-    },
-    "copy": {
-      "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
-    },
-    "name": {
-      "type": "string",
-      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
-    },
-    "edits": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "old_string": {
-            "type": "string",
-            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
-          },
-          "new_string": {
-            "type": "string",
-            "description": "The replacement text. An empty string deletes the matched text."
-          },
-          "replaceAll": {
-            "type": "boolean",
-            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
-          }
-        },
-        "required": [
-          "old_string",
-          "new_string"
-        ],
-        "additionalProperties": false
-      },
-      "description": "Ordered surgical VALUE edits; each applies to the result of the previous. Optional when using a structural append op."
-    },
-    "addSheet": {
-      "type": "object",
-      "additionalProperties": {},
-      "description": "STRUCTURAL add: a whole new Sheet { name, rows: Row[][], … } appended to the workbook (same shape as a create_sheet sheets[] entry)."
-    },
-    "addRows": {
-      "type": "object",
-      "properties": {
-        "sheet": {
-          "type": [
-            "string",
-            "number"
-          ],
-          "description": "Target sheet by name or 0-based index; defaults to the last sheet."
-        },
-        "rows": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": {}
-          },
-          "description": "Row[][] to append (same cell shapes as create_sheet)."
-        }
-      },
-      "required": [
-        "rows"
-      ],
-      "additionalProperties": false,
-      "description": "STRUCTURAL add: append rows to an existing sheet."
-    },
-    "description": {
-      "type": "string",
-      "description": "Optional one-line summary of the change, recorded on the new version."
-    }
-  },
-  "required": [
-    "slug"
   ],
   "additionalProperties": true
 }

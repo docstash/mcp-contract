@@ -12,6 +12,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [3.0.0] — 2026-10-13
+
+### Removed (breaking)
+
+- **`create_docx`, `create_sheet`, `edit_docx` and `edit_sheet` are retired.** DocStash
+  no longer creates or edits Word or spreadsheet documents. The tools are gone from the
+  tool list; a client calling one from a cached list gets an error pointing to
+  `create_pdf`, `create_text` and `create_page`.
+- **Word and spreadsheet docs are view-only.** `read_document`, `show_docx` and
+  `show_sheet` still work on existing ones, but no tool can add a version to them,
+  restore an older version or commit a staged one. The server instructions no longer
+  route any request to Word or spreadsheet output.
+
 ## [2.0.1] — 2026-10-10
 
 ### Changed

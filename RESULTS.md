@@ -12,7 +12,7 @@ verbatim; `<slug>` and other interpolated values are filled with examples.
 
 ---
 
-## `create_pdf` / `create_docx` / `create_sheet` / `create_page` / `create_text` / `create_app` and `edit_pdf` / `edit_docx` / `edit_sheet` / `edit_page` / `edit_text` / `edit_app`
+## `create_pdf` / `create_page` / `create_text` / `create_app` and `edit_pdf` / `edit_page` / `edit_text` / `edit_app`
 
 A create or edit STAGES a new version (it does not save or publish). Payload
 (FULL palette, every type except `app`):
@@ -172,5 +172,5 @@ then appends only the clauses that apply:
 
 - **`stash`** — saves the staged version (the doc stays PRIVATE, not published) and returns the doc's `url`. To make it public afterward, call `set_public_link` with `isPublic: true`. When the staged version already matches the live one, nothing is committed and the result carries `committed: false`.
 - **`discard`** — on a doc with a live version, drops the staged working copy and keeps the live version; on a never-stashed draft, moves the whole draft to Trash (recoverable).
-- **the `show_*` tools** (`show_pdf` / `show_docx` / `show_sheet` / `show_page` / `show_text`) — render the doc inline for the user and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug).
+- **the `show_*` tools** (`show_pdf` / `show_docx` / `show_sheet` / `show_page` / `show_text`) — render the doc inline for the user and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug; Word and spreadsheet docs are view-only).
 - **the lifecycle tools** (`rename_document` / `set_trashed` / `revert_document`), **the sharing tools** (`list_access` / `set_access` / `set_public_link`), **`list_documents`**, **`list_org_members`**, **`get_organizations`**, **`set_organization`** — return the shapes documented on each tool's own entry in `TOOLS.md`.
