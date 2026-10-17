@@ -12,10 +12,10 @@ verbatim; `<slug>` and other interpolated values are filled with examples.
 
 ---
 
-## `create_pdf` / `create_page` / `create_text` / `create_app` and `edit_pdf` / `edit_page` / `edit_text` / `edit_app`
+## `create_pdf` / `create_page` / `create_text` and `edit_pdf` / `edit_page` / `edit_text`
 
 A create or edit STAGES a new version (it does not save or publish). Payload
-(FULL palette, every type except `app`):
+(FULL palette):
 
 ```json
 {
@@ -33,13 +33,13 @@ A create or edit STAGES a new version (it does not save or publish). Payload
 On a host that renders the inline preview, `structuredContent` also carries the
 preview's identity (`slug`, `type`, `name`, `metadata`, `artifactId`, `url`).
 
-### LITE palette, and `create_app` / `edit_app` on every palette
+### LITE palette
 
 No inline preview: the user reviews the draft at the link. Payload:
 
 ```json
 {
-  "unsavedVersion": { "slug": "k3n9qz", "type": "app", "name": "Budget Tracker", "artifactId": "a1b2c3d4" },
+  "unsavedVersion": { "slug": "k3n9qz", "type": "html", "name": "Budget Tracker", "artifactId": "a1b2c3d4" },
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
   "shareUrl": "https://app.docstash.ai/k3n9qz",
   "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Share `shareUrl` as a plain https link and tell them it is a draft they must review and Stash to keep. No downloadable file (.pdf/.docx/.xlsx, no /mnt/data).",
@@ -53,7 +53,7 @@ When there are findings, a `feedback` field repeats the findings note below.
 
 `agentNote`:
 
-> UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_app` with slug=k3n9qz (type=app) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
+> UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_page` with slug=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
 
 ### Clean document (no errors, inline preview)
 
@@ -79,13 +79,13 @@ When there are findings, a `feedback` field repeats the findings note below.
 
 (The clean-document note — including the "revise with `edit_pdf` on the same slug, don't omit it" line — follows, so the fix/iterate rule isn't re-stated here.)
 
-### Web page / app that is broken (`severity: "error"`)
+### Web page that is broken (`severity: "error"`)
 
-> ⚠️ Your app is BROKEN (crash / blank render / missing file):
+> ⚠️ Your page is BROKEN (crash / blank render / missing file):
 >   • uncaught exception while loading: ReferenceError: useState is not defined
 > NEXT STEP: call `screenshot_document` with slug=k3n9qz to SEE the rendered result (desktop + mobile) and fix what's wrong.
 
-(For a web page the first line reads `Your page is BROKEN`. The surface's own note — here the LITE/app note with the `edit_app` steering line — follows.)
+(The surface's own note — here the LITE note with the `edit_page` steering line — follows.)
 
 ### Warnings (`severity: "warning"`)
 
@@ -153,9 +153,11 @@ xlsx/docx specs; binary uploads are not text-extractable), `organizationId` +
 `sameOrganization`, and any unresolved lint `errors` on the latest version. With
 `withHistory: true` it adds `history` (activity events, newest first; pushed
 versions carry the `artifactId` that `revert_document` takes). This
-is also how to re-check errors mid-fix — there is no separate errors tool. For an
-`app`, a bare read returns the bundle's file paths in `files`; passing `file`
-returns that one file's contents in `content`.
+is also how to re-check errors mid-fix — there is no separate errors tool. A multi-page site (an
+older web page made of several files) has no `content`: its files come back in
+`files` (`path`, `size`, `content` each), read-only, with a note to rebuild it as one
+page via `create_page` to change it; a site over ~500 KB of text lists `path` and
+`size` only.
 
 `agentNote` opens with `SILENT read — nothing was rendered or shown to the user.`,
 then appends only the clauses that apply:

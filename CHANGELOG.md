@@ -12,6 +12,33 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.1.0] — 2026-10-15
+
+### Added
+
+- **`read_document` reads multi-page sites.** An older web page made of several files
+  (carried over from the retired app docs) has no single body, so `read_document`
+  returns its files in a new `files` field (each file's path, size and text) instead
+  of `content`. Read-only: `edit_page` can't change one; rebuild it as one page with
+  `create_page`. A very large site returns its file paths only.
+
+## [4.0.0] — 2026-10-15
+
+### Removed (breaking)
+
+- **`create_app` and `edit_app` are retired.** DocStash no longer hosts multi-file app
+  bundles: a web app is one self-contained HTML file, made with `create_page` and
+  changed with `edit_page`. The tools are gone from the tool list; a client calling one
+  from a cached list gets an error pointing to `create_page` and `edit_page`.
+- **`read_document` no longer takes `file` or returns `files`.** Those read one file of
+  a multi-file app.
+
+### Changed
+
+- **`create_page` covers web apps and games.** Its description and the server
+  instructions route live apps (React, three.js, d3, … loaded from a CDN) to it, as one
+  HTML file.
+
 ## [3.0.0] — 2026-10-13
 
 ### Removed (breaking)

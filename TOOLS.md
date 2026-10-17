@@ -173,13 +173,13 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 
 ## `read_document`
 
-Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_page / edit_text / edit_app — as surgical `{ old_string → new_string }` edits, same slug). Word and spreadsheet docs are view-only: read them, but they take no edits or new versions.
+Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_page / edit_text — as surgical `{ old_string → new_string }` edits, same slug). Word and spreadsheet docs are view-only: read them, but they take no edits or new versions.
 
 Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
 Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by `revert_document`). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_sheet / …) — it renders inline entirely off your context.
 
-MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no single body). Pass `file` (a path from that list) to read ONE file's contents into `content` — then change it surgically with `edit_app` (same `file`).
+A multi-page site (an older web page made of several files) has no single body: its files come back in `files` instead, read-only.
 
 **Hints:** `{"title":"Read document","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -196,10 +196,6 @@ MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no sing
     "withHistory": {
       "type": "boolean",
       "description": "If true, also include the activity history (event feed with artifact ids) in the response."
-    },
-    "file": {
-      "type": "string",
-      "description": "APP ONLY: a bundle file path (from the `files` list a bare read returns) to read that one file's contents into `content`."
     }
   },
   "required": [
@@ -214,10 +210,10 @@ MULTI-FILE APPS: a bare read returns the bundle's file paths in `files` (no sing
 ## `screenshot_document`
 
 SCREENSHOT a staged document by slug — the rendered result comes back AS IMAGES for your own review, plus the deterministic `errors`. Renders the latest pushed version and returns:
-  • `errors` — problems detected at render time. PDF: freeflow checks (content wider than the page can hold — an unbreakable string or too-wide table; a keep-whole block taller than one page; text buried under other text; a blank page mid-document; a broken image; a blank document). HTML/APP: viewport + runtime checks (horizontal blowout on desktop or mobile, missing viewport meta, broken images, a blank render, uncaught boot exceptions, missing bundle files, console errors). ALL advisory — nothing blocks a stash; fix them when iterating, never by stripping design.
+  • `errors` — problems detected at render time. PDF: freeflow checks (content wider than the page can hold — an unbreakable string or too-wide table; a keep-whole block taller than one page; text buried under other text; a blank page mid-document; a broken image; a blank document). HTML: viewport + runtime checks (horizontal blowout on desktop or mobile, missing viewport meta, broken images, a blank render, uncaught boot exceptions, missing files, console errors). ALL advisory — nothing blocks a stash; fix them when iterating, never by stripping design.
   • screenshots delivered to YOU as image content — PDF: one image per page at `resolution` px wide (DEFAULT 500 — enough to judge layout / overflow / colour and cheap on tokens; raise to ~1000–1600 ONLY to read fine print), up to 8 pages per call. A bare call serves pages 1-8; pass `firstPage`/`lastPage` for a contiguous range, or `pages` for an EXPLICIT set like [2,5] so pages you did not touch never enter your context. When more pages remain than one call ships, the result names what shipped (`pageRange`) — call again for the rest. Everything else: a bounded full-height shot at DESKTOP and at MOBILE (390px) — so you can SEE the result and catch what the checks cannot: hidden text, wrong colours, a broken visual layout.
 
-Call it after authoring or iterating a PDF, page, or app to check your work BEFORE telling the user it is ready — especially when a create tool reported errors. The images return to YOU (the model); they are NOT the user-facing inline widget.
+Call it after authoring or iterating a PDF or page to check your work BEFORE telling the user it is ready — especially when a create tool reported errors. The images return to YOU (the model); they are NOT the user-facing inline widget.
 
 **Hints:** `{"title":"Screenshot document","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
@@ -537,85 +533,11 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ---
 
-## `create_app`
-
-Generate a LIVE WEB APP (a multi-file bundle) for DocStash and stage an UNSAVED VERSION the user reviews at a docstash.ai link. Use this ONLY when you're genuinely shipping MULTIPLE files (e.g. index.html + a separate app.js + styles.css + local assets). For a single self-contained page, use `create_page` instead — it has no bundle, so it can't fail on a missing local file.
-DocStash hosts the bundle live at a shareable URL.
-
-Pass `files: { "path/to/file": "<contents>", ... }`; the MCP server zips in-memory and uploads as a bundle. YOU MUST declare:
-  - `entry`    — the file the runtime mounts (e.g. 'index.html' for a static site).
-  - `language` — the RUNTIME token. Today only 'static' (HTML+CSS+JS, incl. the CDN frameworks below) actually RUNS in the browser; other tokens ('python', 'ruby', 'php', 'lua', 'go', 'rust', …) are accepted but NOT executed — the entry file is served as SOURCE TEXT (displayed, not run) — so ship runnable apps as 'static'.
-  - `framework` — declare this WHENEVER the bundle uses any of these (lower-case, exact token): 'react' / 'vue' / 'svelte' / 'solid' / 'preact' / 'angular' / 'lit' / 'htmx' / 'alpine' / 'qwik' / 'astro' / 'three' (THREE.js / 3D animations / WebGL scenes) / 'p5' (p5.js / generative art / creative-coding) / 'd3' (D3.js / data viz / charts) / 'jquery'. Pick ONE — the primary library the app is built around. Drives the dashboard card chip.
-    Examples:
-      - HTML page imports Three.js to render a rotating cube → framework: 'three'
-      - React app with a useState counter                   → framework: 'react'
-      - p5.js sketch of bouncing particles                  → framework: 'p5'
-      - Plain HTML + CSS + a tiny <script> tag, no library  → omit `framework` entirely
-    Omit ONLY when the bundle uses NO known framework. Don't guess — you just generated the files, you know which library is in there. Realistic for agent-generated apps: typically 10-50 KB of text, fits in one tool call.
-BUILD-FREE RULE (language='static') — the bundle is served to the browser EXACTLY as uploaded; there is NO build step. Do NOT ship a framework SOURCE project: no `.svelte` / `.vue` / `.ts` / `.tsx` files, no Vite/webpack config expecting compilation (the browser can't load those as `<script type="module">`, and DocStash won't compile them — the app fails with a 'module script … MIME text/html' error). For Svelte / React / Vue / Solid, either (a) inline a PREBUILT single bundle of plain .js/.css into `index.html`, or (b) import the framework from a CDN as ESM, e.g. `import { mount } from 'https://esm.sh/svelte'`. STRONGLY PREFER esm.sh — it serves correct, CORS-safe, versioned ESM, React included: `import React from 'https://esm.sh/react@18'` + `import { createRoot } from 'https://esm.sh/react-dom@18/client'`, mounted from a `<script type=module>`. AVOID the in-browser Babel transformer (@babel/standalone + a `text/babel` script): it's slow and the #1 runtime failure. And DON'T load React/ReactDOM from cdnjs UMD unless the path includes `/umd/` (…/react/18.2.0/umd/react.production.min.js) — omitting `umd/` 404s, the 404 HTML comes back as a non-executable script, and the app dies with 'React is not defined'.
-MODULE-FORMAT CHECKLIST (these three console errors mean you authored a BUILD-STEP/bundler app the runtime can't run) — (1) `Unexpected token 'export'` / (2) `Cannot use import statement outside a module`: a file using `import`/`export` (e.g. an esm.sh module or your own code) was loaded as a CLASSIC script. EVERY file that uses `import`/`export` MUST be loaded via `<script type="module">`; a bare `<script src=…>` at an ESM module throws these. (3) `Unexpected token '<'`: a referenced local JS path (a build output like `/src/main.jsx`, `/assets/index-*.js`, or an extensionless `/client` entry) isn't in the bundle, so the static runtime SPA-falls-back and serves your index.html for that request — the browser then parses HTML as JS. NEVER reference build-output paths; only reference files you actually put in `files`, or absolute CDN URLs. If you'd hit any of these, re-author as EITHER a single self-contained page (prefer `create_page`) OR a bundle whose every script is inline or a `type=module` CDN-ESM import.
-SELF-CONTAINED BUNDLE RULE — the bundle must stand alone. Every LOCAL URL your entry references (scripts, styles, images, fonts) MUST be a key in `files`. For every asset you have exactly three valid choices: (a) inline it, (b) include it in `files`, or (c) load it from an absolute CDN URL (https://…). NEVER reference a local path you didn't write. In particular, do NOT add `<link rel="icon" href="/favicon.ico">` (or any icon/manifest link) unless you actually include that file — a stray local ref is the #1 cause of broken bundles. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA).
-
-RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
-
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the unsaved version and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
-
-**Hints:** `{"title":"Create web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
-    },
-    "slug": {
-      "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
-    },
-    "description": {
-      "type": "string",
-      "description": "One-line commit-style changelog for THIS version (≤~8 words — the CHANGE, not the whole doc), e.g. \"Add Q3 revenue table\". Set it on every call; it becomes the version-history entry."
-    },
-    "files": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "description": "Map of relative paths → UTF-8 file contents (e.g. `{ \"index.html\": \"<!doctype html>...\", \"styles.css\": \"body { ... }\" }`). The MCP server zips everything in memory and uploads as a bundle. Paths can't start with '/' or contain '..'. Must be SELF-CONTAINED — see the rule in this tool's description."
-    },
-    "entry": {
-      "type": "string",
-      "description": "The entry file inside the bundle the runtime mounts (e.g. 'index.html'). Must be a path that exists in `files`."
-    },
-    "language": {
-      "type": "string",
-      "description": "The RUNTIME token: 'static' (HTML+CSS+JS), 'python', 'ruby', 'php', 'lua', 'go', 'rust', 'cpp', 'java', etc."
-    },
-    "framework": {
-      "type": "string",
-      "description": "Optional. Declare a known framework when the bundle uses one: react / vue / svelte / solid / preact / angular / lit / htmx / alpine / qwik / astro / three / p5 / d3 / jquery. Lower-case. Drives the dashboard card chip. Omit for vanilla bundles."
-    }
-  },
-  "required": [
-    "files",
-    "entry",
-    "language"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
 ## `create_page`
 
-Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
+Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos, interactive web apps and games (React, three.js, d3, … loaded from a CDN) — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
 DocStash hosts it live at a shareable URL. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
-ROUTING: ONE self-contained page → this tool, NOT `create_app` (a single file structurally can't have broken local references; use create_app only for genuinely MULTI-FILE bundles). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
+ROUTING: a live page or web app → this tool, as ONE self-contained file (inline your CSS and JS). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
@@ -911,85 +833,6 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
           }
         },
         "required": [
-          "old_string",
-          "new_string"
-        ],
-        "additionalProperties": false
-      },
-      "minItems": 1,
-      "description": "Ordered surgical edits; each applies to the result of the previous one."
-    },
-    "description": {
-      "type": "string",
-      "description": "Optional one-line summary of the change, recorded on the new version."
-    }
-  },
-  "required": [
-    "slug",
-    "edits"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `edit_app`
-
-The DEFAULT way to change a multi-file app — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_app` edits only a multi-file app; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
-
-- `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
-- `new_string` replaces it; an empty string deletes the matched text.
-- Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, staged as an UNSAVED VERSION the user reviews at its docstash.ai link (an app has no inline preview).
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
-- Each edit names the `file` in the bundle to change; the str_replace applies within that file. Never re-emit a whole multi-file bundle for a small change. `read_document` with a `file` argument returns one file's current contents (a bare `read_document` lists the bundle's files).
-
-
-**Hints:** `{"title":"Edit web app","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "slug": {
-      "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
-    },
-    "copy": {
-      "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
-    },
-    "name": {
-      "type": "string",
-      "description": "Name for the NEW doc when `copy: true` (ignored for an in-place edit)."
-    },
-    "edits": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "file": {
-            "type": "string",
-            "description": "The bundle file this edit targets (e.g. 'index.html', 'src/app.js'). Required."
-          },
-          "old_string": {
-            "type": "string",
-            "description": "EXACT text from the current source to replace — verbatim, with enough surrounding context to be unique. Whitespace differences are tolerated."
-          },
-          "new_string": {
-            "type": "string",
-            "description": "The replacement text. An empty string deletes the matched text."
-          },
-          "replaceAll": {
-            "type": "boolean",
-            "description": "Replace EVERY occurrence (default false — `old_string` must match exactly once)."
-          }
-        },
-        "required": [
-          "file",
           "old_string",
           "new_string"
         ],
