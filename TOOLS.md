@@ -497,7 +497,7 @@ DESIGN THE DOCUMENT:
   • To carry a color / dark theme edge-to-edge across EVERY page (not just the cover), set it on the page background — `@page{background:...}` + a matching `body` color. In FLOW content do NOT pin heights or absolutely-position a page layout (no `height:11in`, no `100vh` — the engine owns flow pagination); absolute positioning and a fixed page box are for INSIDE a `pdf-canvas`, where they are the whole point.
   • Self-contained: inline all `<style>`; load fonts / images / libraries from absolute https/CDN URLs. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). REPEATING gradient patterns (`repeating-linear-gradient`, tightly-tiled backgrounds) rasterize unreliably in print — build stripes / hatching from REAL repeated elements (divs / spans) instead.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
@@ -536,12 +536,12 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 ## `create_page`
 
 Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos, interactive web apps and games (React, three.js, d3, … loaded from a CDN) — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
-DocStash hosts it live at a shareable URL. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
+DocStash hosts it live. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
 ROUTING: a live page or web app → this tool, as ONE self-contained file (inline your CSS and JS). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
@@ -584,7 +584,7 @@ Generate an INERT text artifact — markdown, source code, or raw data — for D
   • 'text' — source code / data in ~30 formats. Content = the raw source string. Set `language` to the canonical token (python / typescript / go / rust / json / yaml / csv / sql / etc.).
 ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 

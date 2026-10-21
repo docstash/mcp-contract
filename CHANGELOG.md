@@ -12,6 +12,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.1.1] — 2026-10-20
+
+### Changed
+
+- **A staged draft's link is `reviewUrl` (was `shareUrl`), and it is described as
+  private.** The create and edit tools return `reviewUrl`, the clean
+  `app.docstash.ai/<slug>` link for the user to review the draft. Its description and
+  the `delivery` note say it opens only for the user, their workspace members and
+  people they have granted access, and tell the agent not to call it shareable or
+  public. The stash note and the server instructions say the same of a saved doc.
+- **Every create tool says a stashed doc is private until published.** `create_pdf`,
+  `create_page` and `create_text` say a stashed doc is at a private url (the user,
+  their workspace members, and people granted access) until published with
+  `set_public_link`. `create_page` and the server instructions used to call a page's
+  url "shareable".
+
+### Fixed
+
+- **PDF previews never inline the document's bytes on the tool result.** The inline
+  preview renders a PDF only from its baked file, which it loads via `get_file`, so an
+  inlined copy of the print-HTML source skipped that fetch and failed to render. No
+  change to any tool's inputs.
+
 ## [4.1.0] — 2026-10-15
 
 ### Added

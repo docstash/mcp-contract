@@ -21,8 +21,8 @@ A create or edit STAGES a new version (it does not save or publish). Payload
 {
   "preview": { "slug": "k3n9qz", "type": "pdf", "name": "Q3 Report", "artifactId": "a1b2c3d4" },
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
-  "shareUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "Share `shareUrl` with the user as a plain https link — the inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf/.docx/.xlsx binary, no /mnt/data path).",
+  "reviewUrl": "https://app.docstash.ai/k3n9qz",
+  "delivery": "Give the user `reviewUrl` as a plain https link to review the draft. It is PRIVATE (opens only for the user, their workspace members, and people they have granted access): do NOT call it shareable, public, or a link to send to others. The inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf binary, no /mnt/data path).",
   "errors": []
 }
 ```
@@ -41,8 +41,8 @@ No inline preview: the user reviews the draft at the link. Payload:
 {
   "unsavedVersion": { "slug": "k3n9qz", "type": "html", "name": "Budget Tracker", "artifactId": "a1b2c3d4" },
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
-  "shareUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Share `shareUrl` as a plain https link and tell them it is a draft they must review and Stash to keep. No downloadable file (.pdf/.docx/.xlsx, no /mnt/data).",
+  "reviewUrl": "https://app.docstash.ai/k3n9qz",
+  "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Give the user `reviewUrl` as a plain https link to review it, and tell them it is a draft they must review and Stash to keep. The link is PRIVATE (only the user, their workspace members, and people they have granted access can open it): do NOT call it shareable or public. No downloadable file (.pdf, no /mnt/data).",
   "errors": []
 }
 ```
@@ -63,7 +63,7 @@ When there are findings, a `feedback` field repeats the findings note below.
 
 > Preview shown; NOT stashed — present it and STOP, and do NOT call stash unless the user explicitly asks. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc. To throw it away, call discard with slug=k3n9qz.
 
-(The "no binary / share `shareUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote doesn't restate either.)
+(The "no binary / give the user the private `reviewUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote doesn't restate either.)
 
 ### PDF with layout errors (`severity: "error"`)
 
