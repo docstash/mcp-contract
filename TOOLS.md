@@ -67,58 +67,6 @@ DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go 
 
 ---
 
-## `show_docx`
-
-DISPLAY a Word (.docx) doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_docx` shows only a Word (.docx) doc; a wrong-type call names the right tool.
-
-**Hints:** `{"title":"Show Word doc","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "slug": {
-      "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
-    }
-  },
-  "required": [
-    "slug"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
-## `show_sheet`
-
-DISPLAY a spreadsheet to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_sheet` shows only a spreadsheet; a wrong-type call names the right tool.
-
-**Hints:** `{"title":"Show spreadsheet","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
-
-### Input schema
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "slug": {
-      "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
-    }
-  },
-  "required": [
-    "slug"
-  ],
-  "additionalProperties": true
-}
-```
-
----
-
 ## `show_page`
 
 DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_page` shows only a web page; a wrong-type call names the right tool.
@@ -175,9 +123,9 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 
 Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_page / edit_text — as surgical `{ old_string → new_string }` edits, same slug). Word and spreadsheet docs are view-only: read them, but they take no edits or new versions.
 
-Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML + the xlsx/docx specs; binary uploads aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
+Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML; binary files like an uploaded .pdf, .docx or .xlsx aren't text-extractable), and any unresolved lint `errors` on the latest version (this is ALSO the way to re-check errors mid-fix-loop — no separate errors tool).
 
-Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by `revert_document`). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_sheet / …) — it renders inline entirely off your context.
+Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by `revert_document`). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_text) — it renders inline entirely off your context.
 
 A multi-page site (an older web page made of several files) has no single body: its files come back in `files` instead, read-only.
 

@@ -12,6 +12,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.2.1] — 2026-10-23
+
+### Removed
+
+- **Retired tool names `manage_document`, `manage_sharing`, `create_app`,
+  `edit_app`, `create_sheet`, `edit_sheet` and `edit_docx` are no longer
+  accepted.** None had been advertised since they were retired, and none has been
+  called since October 14. A call to one is now an unknown tool. `create_docx`
+  stays callable and still answers with the tools to use instead.
+- **`show_docx` and `show_sheet` are retired.** DocStash no longer opens Word or
+  spreadsheet documents; existing ones are download-only from the app. Both are
+  no longer advertised; a call to either answers with that, like `create_docx`.
+  The inline preview's spreadsheet bundle is gone: a `ui://docstash/sheet` widget
+  resolves to the document bundle, which says the doc can only be downloaded.
+
 ## [4.2.0] — 2026-10-21
 
 ### Added

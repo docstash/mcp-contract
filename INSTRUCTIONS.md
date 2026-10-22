@@ -38,7 +38,7 @@ Other tools:
 - `rename_document`, `set_trashed` (trash / restore), `revert_document` — document lifecycle.
 - `set_public_link` — PUBLISH (public link on) or unpublish. The only tool that makes a doc public.
 - `list_access`, `set_access` — see / set one person's access (Viewer, Editor, or none).
-- `list_documents`, the `show_*` tools, `read_document`, `list_org_members` — reads. The `show_*` tools (show_pdf / show_page / show_text, plus show_docx / show_sheet for existing Word and spreadsheet docs) SHOW a doc to the user (inline, off your context — pick the one matching the doc's type); `read_document` loads its text into your context SILENTLY (nothing shown) — use read_document, not a show_* tool, when you're about to summarize or revise.
+- `list_documents`, the `show_*` tools, `read_document`, `list_org_members` — reads. The `show_*` tools (show_pdf / show_page / show_text) SHOW a doc to the user (inline, off your context — pick the one matching the doc's type); `read_document` loads its text into your context SILENTLY (nothing shown) — use read_document, not a show_* tool, when you're about to summarize or revise.
 
 Privacy: saving (stash / save / deploy / host) is PRIVATE by default — the url opens only for the user, their workspace members, and anyone they've granted access. PUBLISHING is a SEPARATE step: use `set_public_link` to make a public, sign-in-free link — only when the user explicitly asks to publish / for a public/shareable link.
 
