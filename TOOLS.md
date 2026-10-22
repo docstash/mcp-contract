@@ -15,7 +15,7 @@ List the user's documents. By default returns ACTIVE docs in their default works
   • 'trash'          — recently-trashed docs. Use when the user says "what did I delete" / "restore X" / "undelete".
   • 'shared-with-me' — docs OTHER people shared with this user (grants from other workspaces).
 
-Returns slug, name, url, type, language, owner attribution, and latest-version summary for each. Use this to find an existing doc's `slug` before calling `read_document`, a sharing or lifecycle tool, or an authoring tool.
+Returns slug, name, url, type, language, extension, owner attribution, and latest-version summary for each. Use this to find an existing doc's `slug` before calling `read_document`, a sharing or lifecycle tool, or an authoring tool.
 
 **Hints:** `{"title":"List documents","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -579,9 +579,10 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ## `create_text`
 
-Generate an INERT text artifact — markdown, source code, or raw data — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS AS SOURCE (typography for markdown, syntax highlighting for code), never executed or rendered as a page. Pick `type`:
-  • 'md'   — markdown. Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind.
-  • 'text' — source code / data in ~30 formats. Content = the raw source string. Set `language` to the canonical token (python / typescript / go / rust / json / yaml / csv / sql / etc.).
+Generate an INERT text artifact — markdown, source code, or raw data — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS AS SOURCE (typography for markdown, syntax highlighting for code), never executed or rendered as a page. Set `extension` to the file's extension, which the doc keeps for good (the extension is the file's kind and its download name):
+  • 'md' — markdown. Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind.
+  • any other extension — source code or data: 'py', 'ts', 'go', 'rs', 'json', 'yaml', 'csv', 'sql', 'vue', … Content = the raw source string. Omit `extension` for plain text (.txt).
+A new version (`slug`) keeps the doc's extension: omit `extension`, or pass the same one.
 ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
@@ -606,29 +607,16 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
       "type": "string",
       "description": "One-line commit-style changelog for THIS version (≤~8 words — the CHANGE, not the whole doc), e.g. \"Add Q3 revenue table\". Set it on every call; it becomes the version-history entry."
     },
-    "type": {
+    "extension": {
       "type": "string",
-      "enum": [
-        "md",
-        "text"
-      ],
-      "description": "'md' (markdown) or 'text' (source code / data)."
+      "description": "The file's extension, no dot: 'md' for markdown, else the code or data file's ('py', 'json', 'csv', 'vue', …). Omit for plain text, or for a new version of an existing doc."
     },
     "content": {
       "type": "string",
-      "description": "The content as a UTF-8 string: markdown source for 'md'; the raw source for 'text'."
-    },
-    "language": {
-      "type": "string",
-      "description": "For type='text', the canonical language token (python / json / csv / yaml / typescript / rust / etc.)."
-    },
-    "filename": {
-      "type": "string",
-      "description": "Optional hint for type='text' when `language` is omitted — server infers from the extension."
+      "description": "The content as a UTF-8 string: the markdown source, or the raw source / data."
     }
   },
   "required": [
-    "type",
     "content"
   ],
   "additionalProperties": true
@@ -1013,6 +1001,10 @@ Internal — the inline preview widget fetches its own document bytes here. Not 
     "artifactId": {
       "type": "string",
       "description": "Internal — the artifact id the widget rendered, so bytes are for THAT version."
+    },
+    "link": {
+      "type": "boolean",
+      "description": "Internal — return a signed storage link (fileUrl) the widget fetches itself, instead of inlined bytes."
     }
   },
   "required": [

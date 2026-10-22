@@ -12,6 +12,39 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.2.0] — 2026-10-21
+
+### Added
+
+- **`get_file` takes `link: true` and can answer with `fileUrl`.** The inline
+  preview asks for a short-lived signed storage link and fetches the document's
+  source itself, so no document bytes ride the tool result. The server only
+  returns the link when the widget's CSP reaches that storage host; otherwise,
+  and whenever `link` is absent, it inlines `dataUrl` as before. A widget whose
+  direct fetch fails asks again without `link`. PDFs still answer with `pdfUrl`.
+
+### Changed
+
+- **`create_text` takes the file's `extension` in place of `type`, `language` and
+  `filename`.** Its input is `{ name?, slug?, extension?, content, description? }`.
+  `extension: 'md'` (or `'markdown'`) makes a Markdown doc; any other extension makes
+  a code or data file with that extension (`'py'`, `'csv'`, `'vue'`, …); none makes
+  plain text (`.txt`). A leading dot and uppercase are fine. The doc keeps its first
+  version's extension for good: a new version (`slug`) naming no extension keeps the
+  doc's, and one naming a different extension is refused (`extension_mismatch`,
+  "extension is fixed to csv for this doc"), as is an extension another doc type owns
+  (`.html`, `.pdf`). `edit_text` keeps the doc's extension, and its copy mode copies
+  it.
+- **`list_documents`, `read_document` and the create tools' `metadata` carry the
+  file's `extension`** beside `language`, both read off the stored file.
+
+### Deprecated
+
+- **`create_text`'s `type`, `language` and `filename` arguments.** They are no longer
+  in its input schema but are still accepted: `type: 'md'` makes a Markdown doc, and a
+  language token or a file name names the extension (`python` → `py`, `data.csv` →
+  `csv`, `text` → `txt`). `extension` wins when both are given.
+
 ## [4.1.1] — 2026-10-20
 
 ### Changed
