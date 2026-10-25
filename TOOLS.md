@@ -353,7 +353,7 @@ List the people granted access to a doc (Viewers and Editors). Does NOT include 
 
 ## `set_access`
 
-Set one person's access to a doc: 'read' (Viewer), 'write' (Editor: can push new versions), or 'none' (remove their access). Also changes an existing Viewer to Editor or back. The person must be a DocStash user (they sign in once at app.docstash.ai) and signs in to open the doc: this is NOT a public link. Resolve a name to an email with `list_org_members`. If the user didn't say whether the person may edit, ask before setting 'write'.
+Set one person's access to a doc: 'read' (Viewer), 'write' (Editor: can push new versions), or 'none' (remove their access). Also changes an existing Viewer to Editor or back. DocStash emails the person a link. They don't need an account: without one they can view the doc in their browser from that link, and they sign up to edit or download it. This is NOT a public link: only that person's link opens it. Resolve a name to an email with `list_org_members`. If the user didn't say whether the person may edit, ask before setting 'write'.
 
 **Hints:** `{"title":"Set a person's access","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":false}`
 

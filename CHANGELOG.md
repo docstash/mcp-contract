@@ -12,6 +12,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.2.2] — 2026-10-25
+
+### Changed
+
+- **`set_access` shares with anyone by email, account or not.** DocStash emails the
+  person a link; without an account they view the doc in their browser from it and
+  sign up to edit or download. The result's `say` reports whether the email went
+  out.
+
 ## [4.2.1] — 2026-10-23
 
 ### Removed
