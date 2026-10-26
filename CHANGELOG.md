@@ -12,6 +12,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.2.3] — 2026-10-27
+
+### Removed
+
+- **Retired tool names `create_docx`, `show_docx` and `show_sheet` are no longer
+  accepted.** None is advertised, and none has been called since October 19. A
+  call to one is now an unknown tool, like every other retired name.
+
 ## [4.2.2] — 2026-10-25
 
 ### Changed
