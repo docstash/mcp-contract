@@ -12,6 +12,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.2.4] — 2026-10-28
+
+### Changed
+
+- **`set_access` is marked `openWorldHint: true`.** Granting access emails the
+  person a link, which reaches someone outside DocStash. Annotation only; the
+  tool behaves the same.
+
 ## [4.2.3] — 2026-10-27
 
 ### Removed
