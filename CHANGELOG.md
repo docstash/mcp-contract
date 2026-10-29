@@ -12,6 +12,54 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.3.0] — 2026-10-29
+
+### Changed
+
+- **Render findings come back as one `lint` object, replacing `errors` and
+  `feedback`.** Every create and edit tool, `read_document` and
+  `screenshot_document` return `lint: { verdict, findings, next }` when the version
+  has findings, and nothing when it's clean. `verdict` counts them ("17 errors,
+  12 warnings"); `next` says how to edit and re-check. Each finding is
+  `{ severity, source?, issue }`:
+  - `source` is the offending text exactly as written in the doc, widened in both
+    directions until it occurs once, so it is the `old_string` of the fix: an
+    element's opening tag, the tag referencing a missing file, or the CSS rule that
+    restyles a PDF engine class. Problems with nothing to quote (a crash, a blank
+    page) have none.
+  - `issue` is what the render measured, as a fixed sentence with no advice:
+    "image returned HTTP 404", "image request failed: DNS lookup failed",
+    "700px wider than the page", "overlaps <p>Under</p>", "page 4 is blank".
+  - Every occurrence is its own finding (each broken `<img>`, each repeat, each
+    element sitting on other text); only exact duplicates collapse. Every check
+    reports all of its findings, not only the first.
+- **The server instructions ask for one image per place.** Every image slot gets its
+  own image that fits it, never one image repeated to fill slots, and a broken-image
+  error means replacing exactly the URLs it names while keeping the images that loaded.
+  A new `repeated-image` warning (pdf and page) flags every sizable slot (100×100 px
+  or larger, loaded or not) that reuses an image URL already used by another,
+  naming the URL and the slot that used it first. Small repeats like logos and
+  icons don't count.
+- **Each finding reaches the agent once.** A result's `metadata` carries only the
+  file facts (extension, a text file's language); the findings ride in `lint` alone.
+- **A broken image is an error on a page too**, as it is in a PDF. A missing image
+  is lost content wherever it sits.
+- **Findings name the host's real answer.** When Chrome withholds a cross-site
+  response that isn't an image or script (a 404 page, an HTML page), the render asks
+  the host directly, so the finding says "returned HTTP 404" instead of "blocked by
+  the browser". A broken image is one finding, not also a missing file.
+- **Renders load images the way readers do.** The render browser identifies as the
+  desktop Chrome it is, so image hosts behind bot protection serve it the image they
+  serve readers, and those images are no longer reported broken.
+- **PDF checks measure the page as it prints.** A PDF is checked at its printed
+  width (the page minus its margins, 681.6px), so content wider than the printed
+  page is flagged with the true amount, and text wraps, blocks grow and text
+  overlaps exactly as on paper. A `.pdf-bleed` section allows the full page width;
+  a `.pdf-canvas` is never flagged for width.
+- **Text that runs past the edge is flagged.** A line that can't wrap
+  (`white-space: nowrap`, one long unbreakable token) is flagged at its element even
+  when the element's own box fits, in a PDF and on a page.
+
 ## [4.2.4] — 2026-10-28
 
 ### Changed

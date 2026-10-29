@@ -22,13 +22,12 @@ A create or edit STAGES a new version (it does not save or publish). Payload
   "preview": { "slug": "k3n9qz", "type": "pdf", "name": "Q3 Report", "artifactId": "a1b2c3d4" },
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
   "reviewUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "Give the user `reviewUrl` as a plain https link to review the draft. It is PRIVATE (opens only for the user, their workspace members, and people they have granted access): do NOT call it shareable, public, or a link to send to others. The inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf binary, no /mnt/data path).",
-  "errors": []
+  "delivery": "Give the user `reviewUrl` as a plain https link to review the draft. It is PRIVATE (opens only for the user, their workspace members, and people they have granted access): do NOT call it shareable, public, or a link to send to others. The inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf binary, no /mnt/data path)."
 }
 ```
 
-`errors` is the push-time lint, each finding stamped with `severity` (`"error"`
-= real content loss, `"warning"` = advisory). Empty = clean.
+When the push-time lint found anything, the payload adds `lint` (see
+[Lint findings](#lint-findings) below). No `lint` = clean.
 
 On a host that renders the inline preview, `structuredContent` also carries the
 preview's identity (`slug`, `type`, `name`, `metadata`, `artifactId`, `url`).
@@ -42,12 +41,11 @@ No inline preview: the user reviews the draft at the link. Payload:
   "unsavedVersion": { "slug": "k3n9qz", "type": "html", "name": "Budget Tracker", "artifactId": "a1b2c3d4" },
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
   "reviewUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Give the user `reviewUrl` as a plain https link to review it, and tell them it is a draft they must review and Stash to keep. The link is PRIVATE (only the user, their workspace members, and people they have granted access can open it): do NOT call it shareable or public. No downloadable file (.pdf, no /mnt/data).",
-  "errors": []
+  "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Give the user `reviewUrl` as a plain https link to review it, and tell them it is a draft they must review and Stash to keep. The link is PRIVATE (only the user, their workspace members, and people they have granted access can open it): do NOT call it shareable or public. No downloadable file (.pdf, no /mnt/data)."
 }
 ```
 
-When there are findings, a `feedback` field repeats the findings note below.
+When the lint found anything, the payload adds `lint`, as on the FULL palette.
 
 `say`: `Draft staged — NOT saved or stashed yet; the user must Stash it to keep it.`
 
@@ -55,7 +53,7 @@ When there are findings, a `feedback` field repeats the findings note below.
 
 > UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_page` with slug=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
 
-### Clean document (no errors, inline preview)
+### Clean document (no lint findings, inline preview)
 
 `say`: `Preview ready — review it before stashing.`
 
@@ -65,35 +63,70 @@ When there are findings, a `feedback` field repeats the findings note below.
 
 (The "no binary / give the user the private `reviewUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote doesn't restate either.)
 
-### PDF with layout errors (`severity: "error"`)
+### Lint findings
 
-`say`: `Preview has layout errors — fix them before stashing.` (used whenever `errors` is non-empty, warnings included)
+When the push-time lint found anything, the payload carries `lint`, the `say`
+becomes `Preview has lint findings (<verdict>).`, and the `agentNote` opens with
+`Lint: <verdict> (see \`lint\`).` before the surface's own note. A PDF:
 
-`agentNote` (this findings block prefixes the clean-document note above; here `errors` carries the findings):
+```json
+"lint": {
+  "verdict": "2 errors, 2 warnings",
+  "findings": [
+    { "severity": "error",
+      "source": "<img class=\"cover-image\" src=\"https://upload.wikimedia.org/wikipedia/commons/2/2b/Hugh_Laurie_2012.jpg\">",
+      "issue": "image returned HTTP 404" },
+    { "severity": "error",
+      "source": "<img class=\"portrait\" src=\"https://images.example.com/team.jpg\">",
+      "issue": "image request failed: DNS lookup failed" },
+    { "severity": "warning",
+      "source": "<table class=\"data-table\">",
+      "issue": "84px wider than the page" },
+    { "severity": "warning",
+      "issue": "page 4 is blank" }
+  ],
+  "next": "Edit with edit_pdf using `source` as old_string. Errors lose content; warnings may be intentional design. screenshot_document shows pages."
+}
+```
 
-> ⚠️ 2 LAYOUT ERROR(S) in your PDF — content that can't render cleanly (too wide to paginate, a broken image, or a blank document):
->   • page 2 — img.logo is a broken image (loaded with no dimensions) — check the src is a DIRECT image URL that returns bytes
->   • page 5 — img.hero is a broken image (loaded with no dimensions) — check the src is a DIRECT image URL that returns bytes
-> The engine paginates your freeflow document automatically — fix the offending content itself (let a wide element wrap, break an unbreakable string, repair a broken image) — do NOT strip design elements or shrink the font to force a fit.
-> NEXT STEP: call `screenshot_document` with slug=k3n9qz to SEE the rendered pages before rewriting — pass firstPage/lastPage to screenshot ONLY the pages the findings name (not the whole doc); the images show exactly what broke, so you fix it in one pass instead of guessing from the numbers, then screenshot again until clean.
+A web page that crashed:
 
-(The clean-document note — including the "revise with `edit_pdf` on the same slug, don't omit it" line — follows, so the fix/iterate rule isn't re-stated here.)
+```json
+"lint": {
+  "verdict": "1 error",
+  "findings": [
+    { "severity": "error", "issue": "uncaught exception: ReferenceError: useState is not defined" }
+  ],
+  "next": "Edit with edit_page using `source` as old_string. Errors lose content; warnings may be intentional design. screenshot_document shows the page at desktop and mobile."
+}
+```
 
-### Web page that is broken (`severity: "error"`)
+Each finding is ONE occurrence (each broken `<img>`, each repeat, each element
+sitting on other text); only exact duplicates collapse. `source` is the
+offending text exactly as written, widened until it occurs once in the doc, and
+is absent when there's nothing to quote. `issue` is a fixed sentence of what
+was measured, with no advice. The full set:
 
-> ⚠️ Your page is BROKEN (crash / blank render / missing file):
->   • uncaught exception while loading: ReferenceError: useState is not defined
-> NEXT STEP: call `screenshot_document` with slug=k3n9qz to SEE the rendered result (desktop + mobile) and fix what's wrong.
+| Finding | `issue` |
+|---|---|
+| broken image | `image returned HTTP 404` · `image request failed: DNS lookup failed` (connection refused, timed out, connection reset, TLS certificate error, blocked by the browser) · `image URL returned text/html` · `image data could not be decoded` · `img has no src` |
+| repeated image | `same image URL as <the first slot's source>` |
+| too wide (PDF) | `700px wider than the page` |
+| too wide (page) | `214px wider than the 390px mobile viewport` (or `page is … wider …` when no one element accounts for it) |
+| too tall (PDF) | `1404px tall; a page holds 922px` |
+| overlapping text | `overlaps <the covered elements' source>` |
+| restyled engine class (PDF) | `CSS restyles .pdf-canvas; the PDF engine overrides this class` (source: the CSS rule) |
+| blank page (PDF) | `page 4 is blank` |
+| empty document | `document has no text or media` |
+| blank render (page) | `page painted nothing` |
+| no viewport tag | `no <meta name="viewport">` |
+| missing file | `https://…/app.js returned HTTP 404` (source: the tag that references it) |
+| crash | `uncaught exception: <message>` |
+| console error | `console error: <message>` |
 
-(The surface's own note — here the LITE note with the `edit_page` steering line — follows.)
-
-### Warnings (`severity: "warning"`)
-
-Warning findings get this block, after the error block when both are present
-(and before the NEXT STEP line):
-
-> Warnings (advisory, NOT verdicts — the linter reports geometry, it cannot see intent. Judge each with your own design eyes: an intentional full-bleed glyph, watermark, or decorative bleed that trips a check is FINE — leave it. Fix only what a reader would actually experience as broken, and NEVER strip design elements or shrink the font just to silence a warning):
->   • page 3 — .data-table runs 84px wider than the page can hold — content that can't paginate to a width (an unbreakable URL/string, nowrap text, or a too-wide table). Let it wrap, break the string, or shrink/scroll the table so it fits the column
+An element the source can't account for (one a script built at runtime) has no
+`source`; its issue names it by its text: `element not found in the source
+("Team photo"): image returned HTTP 404`.
 
 ### Copy / template mode (`edit_*` with `copy: true` + `name`)
 
@@ -112,23 +145,19 @@ other type: one bounded full-height shot at desktop and at mobile):
 ```json
 {
   "slug": "k3n9qz",
-  "type": "pdf",
-  "errors": []
+  "type": "pdf"
 }
 ```
 
 When the images cover only part of a PDF, the payload adds
 `"pageRange": { "from": 1, "to": 8, "total": 20 }` and `"pages": [1, 2, 3, 4, 5, 6, 7, 8]`.
 
-`errors` is reused from the push-time lint (the artifact is immutable, so the
-geometry cannot have changed).
+`lint` (when there are findings) is the push-time lint, reused (the artifact is
+immutable, so the geometry cannot have changed).
 
-### Errors present
+### Findings present
 
-> 2 layout error(s) in k3n9qz:
->   • page 2 — img.logo is a broken image (loaded with no dimensions) — check the src is a DIRECT image URL that returns bytes
->   • page 5 — img.hero is a broken image (loaded with no dimensions) — check the src is a DIRECT image URL that returns bytes
-> Fix them by EDITING this same doc. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
+> Lint: 2 errors, 2 warnings (see `lint`). Fix them by EDITING this same doc. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
 
 When the images don't cover the whole doc, the note appends the page window, e.g.:
 
@@ -136,11 +165,11 @@ When the images don't cover the whole doc, the note appends the page window, e.g
 
 (An explicit `pages` selection gets `The images below are page(s) 2, 5 of 20.` with no "see more" nudge.)
 
-### No errors
+### No findings
 
-> No deterministic layout errors in k3n9qz. Review the 5 page image(s) below for anything geometry can't catch — text hidden behind a block, wrong colours, a broken visual layout.
+> No lint findings in k3n9qz. Review the 5 page image(s) below for anything geometry can't catch — text hidden behind a block, wrong colours, a broken visual layout.
 
-With no images: `No deterministic layout errors in k3n9qz. (No page images available for this type.)`
+With no images: `No lint findings in k3n9qz. (No page images available for this type.)`
 
 ---
 
@@ -150,10 +179,10 @@ A silent read — nothing is rendered or shown to the user. Returns the doc's
 metadata, a reference to its latest version, `content` (the body text for
 text-like kinds — html/md/text, agent-authored pdf print-HTML, and the
 xlsx/docx specs; binary uploads are not text-extractable), `organizationId` +
-`sameOrganization`, and any unresolved lint `errors` on the latest version. With
+`sameOrganization`, and the latest version's `lint` when it has findings. With
 `withHistory: true` it adds `history` (activity events, newest first; pushed
 versions carry the `artifactId` that `revert_document` takes). This
-is also how to re-check errors mid-fix — there is no separate errors tool. A multi-page site (an
+is also how to re-check findings mid-fix — there is no separate lint tool. A multi-page site (an
 older web page made of several files) has no `content`: its files come back in
 `files` (`path`, `size`, `content` each), read-only, with a note to rebuild it as one
 page via `create_page` to change it; a site over ~500 KB of text lists `path` and
@@ -165,7 +194,7 @@ then appends only the clauses that apply:
 - **content not inlinable** (binary upload): how to fetch it from the artifact's `fileUrl`.
 - **cross-organization** (`sameOrganization: false`):
   > NOTE: this doc lives in a DIFFERENT workspace than your active one. Reading across workspaces is fine, but a NEW doc you author lands in the ACTIVE workspace: call get_organizations / set_organization first if it should go here instead.
-- **unresolved findings**: the findings split into errors and warnings (same per-finding lines as the authoring notes), plus a pointer to `screenshot_document` to see the rendered pages.
+- **lint findings**: `Lint on this version: <verdict> (see `lint`).`
 - **slug steering**: the shared "revise with the matching `edit_*` tool on the same slug" line, plus a display hint: on FULL, call the matching `show_*` tool (or share the URL for a type with no inline preview); on LITE, share the URL. For a never-stashed doc it adds that the doc is UNSAVED and to call `stash` with the slug to publish it.
 
 ---
