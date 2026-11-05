@@ -51,7 +51,7 @@ When the lint found anything, the payload adds `lint`, as on the FULL palette.
 
 `agentNote`:
 
-> UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_page` with slug=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
+> UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_page` with link=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit link, that creates a different new doc.
 
 ### Clean document (no lint findings, inline preview)
 
@@ -59,7 +59,7 @@ When the lint found anything, the payload adds `lint`, as on the FULL palette.
 
 `agentNote`:
 
-> Preview shown; NOT stashed — present it and STOP, and do NOT call stash unless the user explicitly asks. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc. To throw it away, call discard with slug=k3n9qz.
+> Preview shown; NOT stashed — present it and STOP, and do NOT call stash unless the user explicitly asks. To revise this doc, call `edit_pdf` with link=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit link, that creates a different new doc. To throw it away, call discard with link=k3n9qz.
 
 (The "no binary / give the user the private `reviewUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote doesn't restate either.)
 
@@ -119,6 +119,7 @@ was measured, with no advice. The full set:
 | blank page (PDF) | `page 4 is blank` |
 | empty document | `document has no text or media` |
 | blank render (page) | `page painted nothing` |
+| never ready (page) | `window.docstashReady was never set to true` |
 | no viewport tag | `no <meta name="viewport">` |
 | missing file | `https://…/app.js returned HTTP 404` (source: the tag that references it) |
 | crash | `uncaught exception: <message>` |
@@ -157,7 +158,7 @@ immutable, so the geometry cannot have changed).
 
 ### Findings present
 
-> Lint: 2 errors, 2 warnings (see `lint`). Fix them by EDITING this same doc. To revise this doc, call `edit_pdf` with slug=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit slug, that creates a different new doc.
+> Lint: 2 errors, 2 warnings (see `lint`). Fix them by EDITING this same doc. To revise this doc, call `edit_pdf` with link=k3n9qz (type=pdf) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit link, that creates a different new doc.
 
 When the images don't cover the whole doc, the note appends the page window, e.g.:
 

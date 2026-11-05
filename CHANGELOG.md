@@ -12,6 +12,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.5.0] — 2026-11-05
+
+### Changed
+
+- **Tools that take a doc take `link`.** It accepts the doc's slug or any
+  DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that
+  version), or a link on the workspace's custom domain (e.g.
+  `share.acme.com/launch`). `slug` is still accepted.
+- **`read_document` takes `artifactId`** to read an earlier version (an id from
+  `withHistory`).
+- **The server instructions treat links on the workspace's custom domain** as
+  documents in the connected workspace, like docstash.ai links.
+
+## [4.4.0] — 2026-11-05
+
+### Added
+
+- **A page can say when it's ready.** `create_page` asks a page that keeps
+  loading after it opens (fetching data, loading models or images from script)
+  to set `window.docstashReady = false` at the top of its first script and
+  `window.docstashReady = true` once its first view is drawn, on error paths
+  too. DocStash previews and lints the page at that moment instead of guessing
+  from the network.
+- **A `never-ready` lint warning** (page): `window.docstashReady was never set
+  to true`, for a page that set the flag and never flipped it.
+
 ## [4.3.0] — 2026-10-29
 
 ### Changed

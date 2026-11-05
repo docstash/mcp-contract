@@ -53,13 +53,13 @@ DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go 
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -79,13 +79,13 @@ DISPLAY a web page to the user inline by slug — renders OFF your context (byte
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -105,13 +105,13 @@ DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF 
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -137,9 +137,13 @@ A multi-page site (an older web page made of several files) has no single body: 
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug (from `stash` / `list_documents` / URLs)."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
+    },
+    "artifactId": {
+      "type": "string",
+      "description": "Read this earlier version instead of the latest (an `artifactId` from `withHistory`). A version link in `link` names one too."
     },
     "withHistory": {
       "type": "boolean",
@@ -147,7 +151,7 @@ A multi-page site (an older web page made of several files) has no single body: 
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -171,9 +175,9 @@ Call it after authoring or iterating a PDF or page to check your work BEFORE tel
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug (from a create_* result / list_documents / a docstash URL)."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "firstPage": {
       "type": "integer",
@@ -202,7 +206,7 @@ Call it after authoring or iterating a PDF or page to check your work BEFORE tel
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -244,9 +248,9 @@ Change a doc's name. Metadata only: no new version is created. Use when the user
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "name": {
       "type": "string",
@@ -254,7 +258,7 @@ Change a doc's name. Metadata only: no new version is created. Use when the user
     }
   },
   "required": [
-    "slug",
+    "link",
     "name"
   ],
   "additionalProperties": true
@@ -275,9 +279,9 @@ Move a doc to the trash (`trashed: true`) or restore it from the trash (`trashed
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "trashed": {
       "type": "boolean",
@@ -285,7 +289,7 @@ Move a doc to the trash (`trashed: true`) or restore it from the trash (`trashed
     }
   },
   "required": [
-    "slug",
+    "link",
     "trashed"
   ],
   "additionalProperties": true
@@ -306,9 +310,9 @@ Make an EARLIER version the doc's current version again. Get the version's `arti
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "artifactId": {
       "type": "string",
@@ -316,7 +320,7 @@ Make an EARLIER version the doc's current version again. Get the version's `arti
     }
   },
   "required": [
-    "slug",
+    "link",
     "artifactId"
   ],
   "additionalProperties": true
@@ -337,13 +341,13 @@ List the people granted access to a doc (Viewers and Editors). Does NOT include 
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -363,9 +367,9 @@ Set one person's access to a doc: 'read' (Viewer), 'write' (Editor: can push new
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "email": {
       "type": "string",
@@ -382,7 +386,7 @@ Set one person's access to a doc: 'read' (Viewer), 'write' (Editor: can push new
     }
   },
   "required": [
-    "slug",
+    "link",
     "email",
     "level"
   ],
@@ -404,9 +408,9 @@ PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published,
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The doc's 6-char slug."
+      "description": "The doc: its slug (a result's `slug`, or from `list_documents`) or any DocStash link to it: docstash.ai, app.docstash.ai (a `?v=` link names that version), or the workspace's custom domain."
     },
     "isPublic": {
       "type": "boolean",
@@ -414,7 +418,7 @@ PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published,
     }
   },
   "required": [
-    "slug",
+    "link",
     "isPublic"
   ],
   "additionalProperties": true
@@ -457,11 +461,11 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
   "properties": {
     "name": {
       "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
+      "description": "Required when creating a new doc; omit when pushing a new version (use `link` instead)."
     },
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
+      "description": "The existing doc to iterate: its slug (from a create_* result or `list_documents`) or any DocStash link to it, including the workspace's custom domain. OMIT for a NEW doc; a stale link OVERWRITES that doc. Iterate-vs-new rules: server instructions."
     },
     "description": {
       "type": "string",
@@ -485,6 +489,7 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocStash and show the user an INLINE PREVIEW: landing pages, visual/interactive dashboards, infographics, demos, interactive web apps and games (React, three.js, d3, … loaded from a CDN) — anything the user should SEE RENDERED rather than read as source. Content = a complete `<!doctype html>` document with everything inline (`<style>`, `<script>`) and any images/libraries referenced by absolute URL or CDN. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). Viewer provides chrome — don't wrap.
 DocStash hosts it live. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
+If the page keeps loading after it opens (fetches data, loads models or images from script), set `window.docstashReady = false` at the top of your first script and `window.docstashReady = true` once the first view is drawn, on error paths too. DocStash previews and checks the page at that moment.
 ROUTING: a live page or web app → this tool, as ONE self-contained file (inline your CSS and JS). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
@@ -501,11 +506,11 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
   "properties": {
     "name": {
       "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
+      "description": "Required when creating a new doc; omit when pushing a new version (use `link` instead)."
     },
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
+      "description": "The existing doc to iterate: its slug (from a create_* result or `list_documents`) or any DocStash link to it, including the workspace's custom domain. OMIT for a NEW doc; a stale link OVERWRITES that doc. Iterate-vs-new rules: server instructions."
     },
     "description": {
       "type": "string",
@@ -545,11 +550,11 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
   "properties": {
     "name": {
       "type": "string",
-      "description": "Required when creating a new doc; omit when pushing a new version (use `slug` instead)."
+      "description": "Required when creating a new doc; omit when pushing a new version (use `link` instead)."
     },
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "Slug of an existing doc to iterate (from a create_* result, `list_documents`, or a docstash URL — a full URL is accepted). OMIT for a NEW doc; a stale slug OVERWRITES that doc. Iterate-vs-new rules: server instructions."
+      "description": "The existing doc to iterate: its slug (from a create_* result or `list_documents`) or any DocStash link to it, including the workspace's custom domain. OMIT for a NEW doc; a stale link OVERWRITES that doc. Iterate-vs-new rules: server instructions."
     },
     "description": {
       "type": "string",
@@ -580,8 +585,8 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
 - Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- **In-place** (default): the change lands as a new version of the `link` doc, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves the `link` doc UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
 **Hints:** `{"title":"Edit PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
@@ -592,13 +597,13 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+      "description": "The SOURCE doc: its slug (from `stash` / `list_documents`) or any DocStash link to it. In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
     },
     "copy": {
       "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+      "description": "If true, DON'T change the `link` doc — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
     },
     "name": {
       "type": "string",
@@ -637,7 +642,7 @@ The DEFAULT way to change a PDF — edit it in place, or copy it into a new one.
     }
   },
   "required": [
-    "slug",
+    "link",
     "edits"
   ],
   "additionalProperties": true
@@ -653,8 +658,8 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
 - Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- **In-place** (default): the change lands as a new version of the `link` doc, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves the `link` doc UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
 **Hints:** `{"title":"Edit web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
@@ -665,13 +670,13 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+      "description": "The SOURCE doc: its slug (from `stash` / `list_documents`) or any DocStash link to it. In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
     },
     "copy": {
       "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+      "description": "If true, DON'T change the `link` doc — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
     },
     "name": {
       "type": "string",
@@ -710,7 +715,7 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
     }
   },
   "required": [
-    "slug",
+    "link",
     "edits"
   ],
   "additionalProperties": true
@@ -726,8 +731,8 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
 - Edits apply in order, each to the result of the previous.
-- **In-place** (default): the change lands as a new version of `slug`, shown as a fresh inline preview.
-- **Copy mode** (`copy: true` + `name`): leaves `slug` UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
+- **In-place** (default): the change lands as a new version of the `link` doc, shown as a fresh inline preview.
+- **Copy mode** (`copy: true` + `name`): leaves the `link` doc UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
 **Hints:** `{"title":"Edit text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
@@ -738,13 +743,13 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The 6-char slug of the SOURCE doc (from `stash` / `list_documents` / URLs). In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
+      "description": "The SOURCE doc: its slug (from `stash` / `list_documents`) or any DocStash link to it. In-place: this doc gets a new version. Copy mode: the template read from — it stays untouched."
     },
     "copy": {
       "type": "boolean",
-      "description": "If true, DON'T change `slug` — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
+      "description": "If true, DON'T change the `link` doc — create a NEW doc that is a copy of it with the edits applied (the template flow). Requires `name`."
     },
     "name": {
       "type": "string",
@@ -783,7 +788,7 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
     }
   },
   "required": [
-    "slug",
+    "link",
     "edits"
   ],
   "additionalProperties": true
@@ -804,9 +809,9 @@ STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVAT
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The slug returned by a create_* tool."
+      "description": "The `slug` a create_* tool returned (or a link to that doc)."
     },
     "name": {
       "type": "string",
@@ -818,7 +823,7 @@ STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVAT
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
@@ -838,13 +843,13 @@ Discard a preview (from a create_* tool) without stashing it. Call this when the
 {
   "type": "object",
   "properties": {
-    "slug": {
+    "link": {
       "type": "string",
-      "description": "The slug returned by a create_* tool."
+      "description": "The `slug` a create_* tool returned (or a link to that doc)."
     }
   },
   "required": [
-    "slug"
+    "link"
   ],
   "additionalProperties": true
 }
