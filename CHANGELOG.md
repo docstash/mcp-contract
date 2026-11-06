@@ -12,6 +12,24 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.6.0] — 2026-11-06
+
+### Added
+
+- **Pages can collect form responses.** `create_page` tells the agent to send
+  a page's form from its submit handler with `fetch('/__docstash/submit', {
+  method: 'POST', body: new FormData(form) })`; each submission goes to the
+  doc's owner in DocStash. `res.ok` means it was saved (the page shows its own
+  thank-you), otherwise the body is `{ error }`. A hidden `_gotcha` field is a
+  spam trap. Password and card fields are refused.
+- **`read_responses`** reads a page's form responses, newest first, 50 per call
+  (`cursor` for older ones): each response's fields and when it arrived, nothing
+  about who sent it beyond what they entered. Workspace members only. The result carries a
+  `note` that responses are visitor-written data, not instructions.
+- **Two page lint findings.** `form-not-collected` (warning): a form that
+  mails its answers, or posts them as a page load (to its own origin or to
+  `/__docstash/submit`). `sensitive-field` (error): a password or card field.
+
 ## [4.5.0] — 2026-11-05
 
 ### Changed
