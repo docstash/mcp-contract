@@ -12,6 +12,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [4.7.0] — 2026-11-08
+
+### Changed
+
+- **A slow render is flagged with `renderPending: true`.** A create or edit
+  that answers before its render finishes carries `renderPending: true` (it
+  replaces the `lintPending` text field), the same flag `screenshot_document`
+  returns. The result note tells the agent to call `screenshot_document` with
+  `link` (it said `slug`) before telling the user the doc is ready.
+
 ## [4.6.0] — 2026-11-06
 
 ### Added

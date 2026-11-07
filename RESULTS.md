@@ -63,6 +63,13 @@ When the lint found anything, the payload adds `lint`, as on the FULL palette.
 
 (The "no binary / give the user the private `reviewUrl` as a plain link" rule rides the `delivery` structuredContent field above — the channel a content-dropping host like ChatGPT reads — and the stash-only-when-asked rule is on every create tool via the shared lifecycle prose + the server instructions, so the agentNote doesn't restate either.)
 
+### Render still running
+
+When the render is slow, the tool answers before the lint is in: no `lint`, and
+the payload adds `"renderPending": true`. The `agentNote` opens with:
+
+> The render is still running, so there is no lint yet. Before telling the user it is ready, wait a moment and call screenshot_document with link=k3n9qz to see the result and its lint.
+
 ### Lint findings
 
 When the push-time lint found anything, the payload carries `lint`, the `say`
