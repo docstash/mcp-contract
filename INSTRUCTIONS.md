@@ -2,11 +2,11 @@
 
 <!-- The always-on server `instructions`, delivered to a connected agent every turn. -->
 
-# DocStash — stash what you make: live apps, code, and documents
+# DocStash — stash what you make: live apps, documents and data
 
 DocStash is the agent-friendly home for what you create — shareable by link, portable across any agent. It is NOT just office documents. It stores and serves:
 - **live web pages and apps** — one self-contained HTML file that runs in the browser: sites, dashboards, games and tools, including React / Vue / Svelte and p5 / three / d3 loaded from a CDN;
-- **source code & data files** (any language — stored and shown; non-JS runtimes like python / ruby aren't executed yet);
+- **data tables** — CSV / TSV files, shown as sortable tables;
 - and **formatted documents** — designed PDFs and Markdown.
 
 Whenever the user wants to CREATE, save, stash, publish, deploy, host, or update any of these, author the content YOURSELF and call the matching PER-TYPE create tool — each shows the user an inline preview of exactly what you made. Then STOP: do NOT call `stash` on your own. If they only asked you to create/generate something, the preview is the finished deliverable — present it and let them stash. Call `stash` ONLY when the user explicitly says to save / stash / ship it (or stashes from the inline preview) — stashing SAVES the doc but keeps it PRIVATE; it does NOT publish. If the user asked to PUBLISH / make public / get a public link, stash first, then call `set_public_link` with isPublic: true. Do NOT hand back a downloadable binary file. For a PDF, YOU author the document as beautiful, print-ready HTML via `create_pdf` — DocStash frames + presents it as a real paginated PDF; do NOT generate a binary .pdf.
@@ -14,7 +14,7 @@ Whenever the user wants to CREATE, save, stash, publish, deploy, host, or update
 Pick the create tool by what you're producing (each tool's own description carries its exact input shape):
 - a PDF — and any generic "make me a document" ask → `create_pdf`
 - a live web page or web app (one HTML file)       → `create_page`
-- markdown, source code, or raw data               → `create_text`
+- markdown (code goes in fenced blocks), or CSV / TSV data → `create_text`
 
 PDF (`create_pdf`): you AUTHOR the document as print-ready HTML and DocStash frames it as real paper — this is where a document looks DESIGNED, so bring your full web-design skill: an attractive cover, a real type scale, and full, balanced pages (a half-empty page reads as a mistake, not restraint). Author ONE continuous top-to-bottom document; DocStash flows it across US Letter pages and handles pagination — you do NOT split pages or add your own page margin (the engine applies one; adding your own double-margins the page). Build designed set-pieces (cover, dividers, full-page infographics) as `<section class="pdf-canvas">` — a FIXED one-page canvas where you absolutely-position art + full-bleed backgrounds against known bounds and content auto-fits to the page (compose it like a poster); let running text FLOW. Other controls: `pdf-break` (new page), `pdf-keep` (keep a block from splitting), `pdf-bleed` (flowing full-bleed section); theme every page via `@page{background:…}`; size type for print (body ~13-15px). It is a STATIC print document — no JS runs (`<script>` is rejected); draw charts/graphics as inline SVG. A `create_pdf` push auto-checks the render and reports any findings as `lint`; when it has any — or before you tell the user a PDF is ready — call `screenshot_document` with the doc's slug as `link` to SEE the rendered pages and fix what's wrong. To use a PRE-EXISTING .pdf, the user drag-and-drops it on the dashboard (app.docstash.ai).
 

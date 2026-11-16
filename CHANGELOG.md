@@ -12,6 +12,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [5.0.0] — 2026-11-16
+
+### Removed (breaking)
+
+- **`create_text` makes Markdown and CSV / TSV tables only.** `extension` takes
+  `'md'` (the default, and what `'txt'` or a plain-text hint becomes) or `'csv'`
+  / `'tsv'`; a code or other data extension (`'py'`, `'json'`, `'vue'`, …) is
+  refused with an error that says to put the code in a fenced block in a
+  Markdown doc. Omitting `extension` on a new doc makes Markdown (it made plain
+  text). The description and the server instructions no longer route source code
+  or config files to it.
+
+### Changed
+
+- **`show_text` and `edit_text` cover a markdown or CSV doc** (were "a markdown /
+  text / code doc"); their titles read "Markdown or CSV".
+
 ## [4.7.0] — 2026-11-08
 
 ### Changed

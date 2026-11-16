@@ -95,9 +95,9 @@ DISPLAY a web page to the user inline by slug — renders OFF your context (byte
 
 ## `show_text`
 
-DISPLAY a markdown / text / code doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown / text / code doc; a wrong-type call names the right tool.
+DISPLAY a markdown or CSV doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown or CSV doc; a wrong-type call names the right tool.
 
-**Hints:** `{"title":"Show text or code","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
+**Hints:** `{"title":"Show Markdown or CSV","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -459,7 +459,7 @@ PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published,
 
 ## `create_pdf`
 
-Generate a beautiful, print-ready PDF document for DocStash and show the user an INLINE PREVIEW: reports, memos, proposals, letters, résumés, whitepapers, contracts, essays, one-pagers. THIS IS THE DEFAULT for a generic 'make me a document' / 'make me a PDF' request (use `create_text` for markdown/code source, `create_page` for a web page). `content` = HTML you author, and DocStash renders + presents it AS A PDF (paginated paper, page nav, zoom, one-click PDF download). Do NOT generate a binary .pdf; the user drag-and-drops pre-existing .pdf files on the dashboard.
+Generate a beautiful, print-ready PDF document for DocStash and show the user an INLINE PREVIEW: reports, memos, proposals, letters, résumés, whitepapers, contracts, essays, one-pagers. THIS IS THE DEFAULT for a generic 'make me a document' / 'make me a PDF' request (use `create_text` for markdown or CSV, `create_page` for a web page). `content` = HTML you author, and DocStash renders + presents it AS A PDF (paginated paper, page nav, zoom, one-click PDF download). Do NOT generate a binary .pdf; the user drag-and-drops pre-existing .pdf files on the dashboard.
 
 This is a REAL HTML/CSS document rendered by a full Chromium engine and baked to PDF — you have the SAME visual toolkit a web page has (any CSS layout, SVG, gradients, filters, transforms, web fonts, images), NOT a limited document format. It is a STATIC print document: NO `<script>` / JS runs (it is rejected) — draw every chart, diagram and graphic as hand-authored inline SVG + CSS (crisp, and how the best docs are built). The ONLY difference from a live web page is GEOMETRY: it prints onto fixed US Letter pages that never scroll or reflow.
 
@@ -521,7 +521,7 @@ Generate a WEB PAGE (a single self-contained HTML file, rendered live) for DocSt
 DocStash hosts it live. Load any JS deps as `<script type="module">` ESM (esm.sh) or inline them — never reference a local build-output path (the file won't exist).
 If the page keeps loading after it opens (fetches data, loads models or images from script), set `window.docstashReady = false` at the top of your first script and `window.docstashReady = true` once the first view is drawn, on error paths too. DocStash previews and checks the page at that moment.
 FORMS: to collect what visitors enter (contact, RSVP, signup, survey, feedback), give each field a `name` and send the form from its submit handler: `e.preventDefault(); const res = await fetch('/__docstash/submit', { method: 'POST', body: new FormData(form) })`. Each submission goes to the doc's owner in DocStash (read them with `read_responses`). `res.ok` means it was saved: show your own thank-you state; otherwise show `(await res.json()).error`. Add a hidden spam trap `<input name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">`. Never use mailto:, a placeholder action, or a plain form post (only fetch reaches the owner). Never ask for passwords or card numbers: DocStash refuses those responses.
-ROUTING: a live page or web app → this tool, as ONE self-contained file (inline your CSS and JS). Markdown / source code / raw data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
+ROUTING: a live page or web app → this tool, as ONE self-contained file (inline your CSS and JS). Markdown or CSV / TSV data → `create_text` (inert source, not a rendered page). A designed PDF document → `create_pdf`.
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
@@ -563,15 +563,15 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ## `create_text`
 
-Generate an INERT text artifact — markdown, source code, or raw data — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS AS SOURCE (typography for markdown, syntax highlighting for code), never executed or rendered as a page. Set `extension` to the file's extension, which the doc keeps for good (the extension is the file's kind and its download name):
-  • 'md' — markdown. Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind.
-  • any other extension — source code or data: 'py', 'ts', 'go', 'rs', 'json', 'yaml', 'csv', 'sql', 'vue', … Content = the raw source string. Omit `extension` for plain text (.txt).
+Generate an INERT text artifact — markdown, or a CSV / TSV table — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS (typography for markdown, a sortable table for CSV / TSV), never executed or rendered as a page. Set `extension` to the file's extension, which the doc keeps for good (the extension is the file's kind and its download name):
+  • 'md' — markdown (the default). Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind. Put source code in fenced code blocks: there is no separate code file type.
+  • 'csv' or 'tsv' — a table. Content = the raw data.
 A new version (`slug`) keeps the doc's extension: omit `extension`, or pass the same one.
-ROUTING: scripts, code files, READMEs, configs, raw CSV/JSON → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
+ROUTING: READMEs, notes, code (in a markdown doc), raw CSV / TSV → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
 
 Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
-**Hints:** `{"title":"Create text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
+**Hints:** `{"title":"Create Markdown or CSV","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
@@ -593,11 +593,11 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
     },
     "extension": {
       "type": "string",
-      "description": "The file's extension, no dot: 'md' for markdown, else the code or data file's ('py', 'json', 'csv', 'vue', …). Omit for plain text, or for a new version of an existing doc."
+      "description": "The file's extension, no dot: 'md' for markdown, 'csv' or 'tsv' for a table. Omit for markdown, or for a new version of an existing doc."
     },
     "content": {
       "type": "string",
-      "description": "The content as a UTF-8 string: the markdown source, or the raw source / data."
+      "description": "The content as a UTF-8 string: the markdown source, or the raw CSV / TSV data."
     }
   },
   "required": [
@@ -757,7 +757,7 @@ The DEFAULT way to change a web page — edit it in place, or copy it into a new
 
 ## `edit_text`
 
-The DEFAULT way to change a markdown / text / code doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_text` edits only a markdown / text / code doc; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
+The DEFAULT way to change a markdown or CSV doc — edit it in place, or copy it into a new one. Emit ONLY the changes as `{ old_string → new_string }` pairs, not the whole document. `edit_text` edits only a markdown or CSV doc; a wrong-type call names the right tool. When to edit vs re-run a create tool, and iterate-vs-new-doc: DocStash server instructions.
 
 - `old_string` must be text that appears in the CURRENT source — call `read_document` first to get it, and copy it verbatim with enough surrounding context to match EXACTLY ONE place (or set `replaceAll`). Whitespace differences are tolerated. A stale or ambiguous `old_string` fails cleanly and changes NOTHING, so re-read and retry.
 - `new_string` replaces it; an empty string deletes the matched text.
@@ -766,7 +766,7 @@ The DEFAULT way to change a markdown / text / code doc — edit it in place, or 
 - **Copy mode** (`copy: true` + `name`): leaves the `link` doc UNTOUCHED and produces a NEW doc — a filled-in copy with your edits applied. The TEMPLATE flow: keep one master, spin off variants (an invoice/offer-letter/report template → a copy per client). Returns the new doc's own slug.
 
 
-**Hints:** `{"title":"Edit text or code","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
+**Hints:** `{"title":"Edit Markdown or CSV","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
 ### Input schema
 
