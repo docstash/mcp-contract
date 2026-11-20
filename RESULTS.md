@@ -19,10 +19,13 @@ A create or edit STAGES a new version (it does not save or publish). Payload
 
 ```json
 {
-  "preview": { "slug": "k3n9qz", "type": "pdf", "name": "Q3 Report", "artifactId": "a1b2c3d4" },
+  "slug": "k3n9qz",
+  "type": "pdf",
+  "name": "Q3 Report",
+  "artifactId": "a1b2c3d4",
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
   "reviewUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "Give the user `reviewUrl` as a plain https link to review the draft. It is PRIVATE (opens only for the user, their workspace members, and people they have granted access): do NOT call it shareable, public, or a link to send to others. The inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf binary, no /mnt/data path)."
+  "delivery": "Give the user `reviewUrl` as a plain https link to review the unsaved version. It is PRIVATE (opens only for the user, their workspace members, and people they have granted access): do NOT call it shareable, public, or a link to send to others. The inline preview is the deliverable. Do NOT generate, attach, or offer a downloadable file (no .pdf binary, no /mnt/data path)."
 }
 ```
 
@@ -30,28 +33,31 @@ When the push-time lint found anything, the payload adds `lint` (see
 [Lint findings](#lint-findings) below). No `lint` = clean.
 
 On a host that renders the inline preview, `structuredContent` also carries the
-preview's identity (`slug`, `type`, `name`, `metadata`, `artifactId`, `url`).
+version's file facts as `metadata`.
 
 ### LITE palette
 
-No inline preview: the user reviews the draft at the link. Payload:
+No inline preview: the user reviews the unsaved version at the link. Payload:
 
 ```json
 {
-  "unsavedVersion": { "slug": "k3n9qz", "type": "html", "name": "Budget Tracker", "artifactId": "a1b2c3d4" },
+  "slug": "k3n9qz",
+  "type": "html",
+  "name": "Budget Tracker",
+  "artifactId": "a1b2c3d4",
   "url": "https://app.docstash.ai/k3n9qz?v=a1b2c3d4",
   "reviewUrl": "https://app.docstash.ai/k3n9qz",
-  "delivery": "This is an UNSAVED DRAFT — NOT saved, stashed, or public. Do NOT tell the user you saved/stashed/published it; describe it as a draft/preview only. Give the user `reviewUrl` as a plain https link to review it, and tell them it is a draft they must review and Stash to keep. The link is PRIVATE (only the user, their workspace members, and people they have granted access can open it): do NOT call it shareable or public. No downloadable file (.pdf, no /mnt/data)."
+  "delivery": "This is an UNSAVED VERSION — NOT stashed or public. Do NOT tell the user you stashed or published it; describe it as an unsaved preview only. Give the user `reviewUrl` as a plain https link to review it, and tell them it is unsaved: they must review it and Stash it to keep it. The link is PRIVATE (only the user, their workspace members, and people they have granted access can open it): do NOT call it shareable or public. No downloadable file (.pdf, no /mnt/data)."
 }
 ```
 
 When the lint found anything, the payload adds `lint`, as on the FULL palette.
 
-`say`: `Draft staged — NOT saved or stashed yet; the user must Stash it to keep it.`
+`say`: `Unsaved version created — NOT stashed yet; the user must Stash it to keep it.`
 
 `agentNote`:
 
-> UNSAVED draft staged — tell the user plainly it is a draft they must review and Stash to keep; do NOT call stash yourself. To revise this doc, call `edit_page` with link=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit link, that creates a different new doc.
+> UNSAVED version created — tell the user plainly it is unsaved and they must review it and Stash it to keep it; do NOT call stash yourself. To revise this doc, call `edit_page` with link=k3n9qz (type=html) (emit ONLY the changed spans as edits, not the whole doc) — do NOT omit link, that creates a different new doc.
 
 ### Clean document (no lint findings, inline preview)
 
@@ -141,14 +147,14 @@ An element the source can't account for (one a script built at runtime) has no
 ### Copy / template mode (`edit_*` with `copy: true` + `name`)
 
 The edit lands on a NEW document (a filled copy); the source is untouched. The
-returned `preview` points at the new copy's slug, and its version history records
+returned `slug` is the new copy's, and its version history records
 the source slug plus each edit's raw `old_string`/`new_string`.
 
 ---
 
 ## `screenshot_document`
 
-Renders the staged working copy for the agent's own QA. Payload plus the page
+Renders the unsaved version for the agent's own QA. Payload plus the page
 images as JPEG image content blocks (PDF: one per page, up to 8 per call; every
 other type: one bounded full-height shot at desktop and at mobile):
 
@@ -162,7 +168,7 @@ other type: one bounded full-height shot at desktop and at mobile):
 When the images cover only part of a PDF, the payload adds
 `"pageRange": { "from": 1, "to": 8, "total": 20 }` and `"pages": [1, 2, 3, 4, 5, 6, 7, 8]`.
 
-`lint` (when there are findings) is the push-time lint, reused (the artifact is
+`lint` (when there are findings) is the push-time lint, reused (the version is
 immutable, so the geometry cannot have changed).
 
 ### Findings present
@@ -201,7 +207,7 @@ page via `create_page` to change it; a site over ~500 KB of text lists `path` an
 `agentNote` opens with `SILENT read — nothing was rendered or shown to the user.`,
 then appends only the clauses that apply:
 
-- **content not inlinable** (binary upload): how to fetch it from the artifact's `fileUrl`.
+- **content not inlinable** (binary upload): how to fetch it from `fileUrl`.
 - **cross-organization** (`sameOrganization: false`):
   > NOTE: this doc lives in a DIFFERENT workspace than your active one. Reading across workspaces is fine, but a NEW doc you author lands in the ACTIVE workspace: call get_organizations / set_organization first if it should go here instead.
 - **lint findings**: `Lint on this version: <verdict> (see `lint`).`
@@ -211,7 +217,7 @@ then appends only the clauses that apply:
 
 ## `stash` / `discard` / the lifecycle and sharing tools / `list_documents` / `list_org_members` / `get_organizations` / `set_organization` / the `show_*` tools
 
-- **`stash`** — saves the staged version (the doc stays PRIVATE, not published) and returns the doc's `url`. To make it public afterward, call `set_public_link` with `isPublic: true`. When the staged version already matches the live one, nothing is committed and the result carries `committed: false`.
-- **`discard`** — on a doc with a live version, drops the staged working copy and keeps the live version; on a never-stashed draft, moves the whole draft to Trash (recoverable).
-- **the `show_*` tools** (`show_pdf` / `show_page` / `show_text`) — render the doc inline for the user and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug; Word and spreadsheet docs are view-only).
+- **`stash`** — stashes the unsaved version (the doc stays PRIVATE, not published) and returns the doc's `url`. To make it public afterward, call `set_public_link` with `isPublic: true`. When the unsaved version already matches the live one, nothing is stashed and the result carries `stashed: false`.
+- **`discard`** — on a doc with a live version, drops the unsaved version and keeps the live version; on a never-stashed doc, moves the whole doc to Trash (recoverable).
+- **the `show_*` tools** (`show_pdf` / `show_page` / `show_text`) — render the doc inline for the user (a call on a doc of another type is an error naming the right tool) and echo the same slug-continuity guidance (revise with the matching `edit_*` tool on the same slug; Word and spreadsheet docs are view-only).
 - **the lifecycle tools** (`rename_document` / `set_trashed` / `revert_document`), **the sharing tools** (`list_access` / `set_access` / `set_public_link`), **`read_responses`**, **`list_documents`**, **`list_org_members`**, **`get_organizations`**, **`set_organization`** — return the shapes documented on each tool's own entry in `TOOLS.md`.

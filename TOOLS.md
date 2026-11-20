@@ -13,7 +13,7 @@ calls.
 List the user's documents. By default returns ACTIVE docs in their default workspace (their team workspace if they have one, personal otherwise). Use `which` to switch lens:
   • 'active'         — default. Docs the user owns or is a workspace member on. Has the user's own work.
   • 'trash'          — recently-trashed docs. Use when the user says "what did I delete" / "restore X" / "undelete".
-  • 'shared-with-me' — docs OTHER people shared with this user (grants from other workspaces).
+  • 'shared-with-me' — docs OTHER people shared with this user (shares from other workspaces).
 
 Returns slug, name, url, type, language, extension, owner attribution, and latest-version summary for each. Use this to find an existing doc's `slug` before calling `read_document`, a sharing or lifecycle tool, or an authoring tool.
 
@@ -43,7 +43,7 @@ Returns slug, name, url, type, language, extension, owner attribution, and lates
 
 ## `show_pdf`
 
-DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_pdf` shows only a PDF; a wrong-type call names the right tool.
+DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + a version reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_pdf` shows only a PDF; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show PDF","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
@@ -69,7 +69,7 @@ DISPLAY a PDF to the user inline by slug — renders OFF your context (bytes go 
 
 ## `show_page`
 
-DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_page` shows only a web page; a wrong-type call names the right tool.
+DISPLAY a web page to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + a version reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_page` shows only a web page; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show web page","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
@@ -95,7 +95,7 @@ DISPLAY a web page to the user inline by slug — renders OFF your context (byte
 
 ## `show_text`
 
-DISPLAY a markdown or CSV doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + an artifact reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown or CSV doc; a wrong-type call names the right tool.
+DISPLAY a markdown or CSV doc to the user inline by slug — renders OFF your context (bytes go to the widget, nothing enters the conversation; returns metadata + a version reference, never the text). Use when the user asks to SEE a doc ("show / open / pull up X"). To load the TEXT into your context to summarize or revise, use `read_document` instead. `show_text` shows only a markdown or CSV doc; a wrong-type call names the right tool.
 
 **Hints:** `{"title":"Show Markdown or CSV","readOnlyHint":true,"destructiveHint":false,"openWorldHint":true}`
 
@@ -123,7 +123,7 @@ DISPLAY a markdown or CSV doc to the user inline by slug — renders OFF your co
 
 Read a document's CONTENT into your context by slug — a SILENT read: NOTHING is rendered or shown to the user (no widget, no preview, no link card). This is the right FIRST call whenever you need the text to reason over — to summarize it, answer questions about it, or change it (then apply the change with the matching `edit_*` tool — edit_pdf / edit_page / edit_text — as surgical `{ old_string → new_string }` edits, same slug). Word and spreadsheet docs are view-only: read them, but they take no edits or new versions.
 
-Returns the doc's metadata, a reference to its latest artifact (id, signed fileUrl, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML; binary files like an uploaded .pdf, .docx or .xlsx aren't text-extractable), and the latest version's `lint` findings when it has any (this is ALSO the way to re-check them mid-fix-loop).
+Returns the doc's metadata, a reference to its latest version in `artifact` (id, metadata), `content` — the full body text — for text-like kinds (html/md/text + agent-authored pdf print-HTML; binary files like an uploaded .pdf, .docx or .xlsx aren't text-extractable: those come with `fileUrl`, a short-lived signed link to the file, for your own reading only), and the latest version's `lint` findings when it has any (this is ALSO the way to re-check them mid-fix-loop).
 
 Pass `withHistory: true` to also include the activity feed — every event newest-first (type, timestamp, author, and for content_pushed events the `artifactId` used by `revert_document`). To DISPLAY the doc to the user instead, call the matching `show_*` tool (show_pdf / show_page / show_text) — it renders inline entirely off your context.
 
@@ -147,7 +147,7 @@ A multi-page site (an older web page made of several files) has no single body: 
     },
     "withHistory": {
       "type": "boolean",
-      "description": "If true, also include the activity history (event feed with artifact ids) in the response."
+      "description": "If true, also include the activity history (event feed with version ids) in the response."
     }
   },
   "required": [
@@ -161,7 +161,7 @@ A multi-page site (an older web page made of several files) has no single body: 
 
 ## `screenshot_document`
 
-SCREENSHOT a staged document by slug — the rendered result comes back AS IMAGES for your own review, plus its `lint` findings. Renders the latest pushed version and returns:
+SCREENSHOT a document by slug — the rendered result comes back AS IMAGES for your own review, plus its `lint` findings. Renders the latest pushed version and returns:
   • `lint` — problems detected at render time, each with the exact `source` text to edit. PDF: freeflow checks (content wider than the page can hold — an unbreakable string or too-wide table; a keep-whole block taller than one page; text buried under other text; a blank page mid-document; a broken image; a blank document). HTML: viewport + runtime checks (horizontal blowout on desktop or mobile, missing viewport meta, broken images, a blank render, uncaught boot exceptions, missing files, console errors). ALL advisory — nothing blocks a stash; fix them when iterating, never by stripping design.
   • screenshots delivered to YOU as image content — PDF: one image per page at `resolution` px wide (DEFAULT 500 — enough to judge layout / overflow / colour and cheap on tokens; raise to ~1000–1600 ONLY to read fine print), up to 8 pages per call. A bare call serves pages 1-8; pass `firstPage`/`lastPage` for a contiguous range, or `pages` for an EXPLICIT set like [2,5] so pages you did not touch never enter your context. When more pages remain than one call ships, the result names what shipped (`pageRange`) — call again for the rest. Everything else: a bounded full-height shot at DESKTOP and at MOBILE (390px) — so you can SEE the result and catch what the checks cannot: hidden text, wrong colours, a broken visual layout.
 
@@ -300,7 +300,7 @@ Move a doc to the trash (`trashed: true`) or restore it from the trash (`trashed
 
 ## `revert_document`
 
-Make an EARLIER version the doc's current version again. Get the version's `artifactId` from `read_document` with withHistory:true (each content_pushed event carries `payload.artifactId`). No content is lost: the revert is logged as a new event and the full history stays intact.
+Make an EARLIER version the doc's current version again. Get the version's `artifactId` from `read_document` with withHistory:true (each `created` and `content_pushed` entry in `history` carries its `artifactId`). No content is lost: the revert is logged as a new event and the full history stays intact.
 
 **Hints:** `{"title":"Revert document to an earlier version","readOnlyHint":false,"destructiveHint":false,"idempotentHint":true,"openWorldHint":false}`
 
@@ -428,7 +428,7 @@ Read what visitors submitted through the forms on a web page doc, newest first: 
 
 ## `set_public_link`
 
-PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published, anyone with the URL sees the latest saved version without signing in; this is the ONLY way to make a doc publicly viewable, and a stashed url stays private. The doc must be saved (stashed) before publishing. Unpublishing cuts off everyone using the public URL; people granted access and workspace members keep access. Returns the public docstash.ai `url` when published. Call only when the user explicitly asks to publish / make public / get a public or shareable link, or to unpublish.
+PUBLISH a doc (`isPublic: true`) or unpublish it (`isPublic: false`). Published, anyone with the URL sees the latest stashed version without signing in; this is the ONLY way to make a doc publicly viewable, and a stashed url stays private. The doc must be stashed before publishing. Unpublishing cuts off everyone using the public URL; people granted access and workspace members keep access. Returns the public docstash.ai `url` when published. Call only when the user explicitly asks to publish / make public / get a public or shareable link, or to unpublish.
 
 **Hints:** `{"title":"Publish or unpublish document","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":true}`
 
@@ -479,7 +479,7 @@ DESIGN THE DOCUMENT:
   • To carry a color / dark theme edge-to-edge across EVERY page (not just the cover), set it on the page background — `@page{background:...}` + a matching `body` color. In FLOW content do NOT pin heights or absolutely-position a page layout (no `height:11in`, no `100vh` — the engine owns flow pagination); absolute positioning and a fixed page box are for INSIDE a `pdf-canvas`, where they are the whole point.
   • Self-contained: inline all `<style>`; load fonts / images / libraries from absolute https/CDN URLs. IMAGES & FONTS — image/font URLs MUST be DIRECT files (a gallery/viewer page renders BROKEN); the direct-URL recipes, sizing, and custom-font rules are in the server instructions (VISUAL DOCUMENTS & MEDIA). REPEATING gradient patterns (`repeating-linear-gradient`, tightly-tiled backgrounds) rasterize unreliably in print — build stripes / hatching from REAL repeated elements (divs / spans) instead.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and stashes it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create PDF","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
@@ -525,7 +525,7 @@ ROUTING: a live page or web app → this tool, as ONE self-contained file (inlin
 
 RESPONSIVE — the page MUST reflow + scroll on mobile: include the `<meta name="viewport">` tag and DON'T lock it to `height:100vh` + `overflow:hidden` (that traps phone scrolling). The viewer renders full-width, no extra scroll container.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and stashes it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create web page","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
@@ -563,13 +563,13 @@ Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user rev
 
 ## `create_text`
 
-Generate an INERT text artifact — markdown, or a CSV / TSV table — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS (typography for markdown, a sortable table for CSV / TSV), never executed or rendered as a page. Set `extension` to the file's extension, which the doc keeps for good (the extension is the file's kind and its download name):
+Generate an INERT text document — markdown, or a CSV / TSV table — for DocStash and show the user an INLINE PREVIEW. This is for content the user READS (typography for markdown, a sortable table for CSV / TSV), never executed or rendered as a page. Set `extension` to the file's extension, which the doc keeps for good (the extension is the file's kind and its download name):
   • 'md' — markdown (the default). Content = the markdown source. For prose, notes, READMEs, technical docs, documentation of any kind. Put source code in fenced code blocks: there is no separate code file type.
   • 'csv' or 'tsv' — a table. Content = the raw data.
 A new version (`slug`) keeps the doc's extension: omit `extension`, or pass the same one.
 ROUTING: READMEs, notes, code (in a markdown doc), raw CSV / TSV → here. A LIVE rendered page → `create_page`. A designed PDF (and any generic 'make me a document/PDF' ask) → `create_pdf`.
 
-Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and saves it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
+Nothing is stashed yet — then STOP: do NOT call `stash` yourself; the user reviews the preview and stashes it. Once stashed, the doc is at a PRIVATE url (the user, their workspace members, and people they've granted access) until published with `set_public_link`. Full lifecycle, slug/versioning, attribution + publish rules: DocStash server instructions.
 
 **Hints:** `{"title":"Create Markdown or CSV","readOnlyHint":false,"destructiveHint":false,"idempotentHint":false,"openWorldHint":true}`
 
@@ -846,11 +846,11 @@ STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVAT
     },
     "name": {
       "type": "string",
-      "description": "Optional override for the doc name at save time (new docs only)."
+      "description": "Optional override for the doc name at stash time (new docs only)."
     },
     "description": {
       "type": "string",
-      "description": "Optional one-line changelog OVERRIDE. Prefer setting this on the create_* tool instead — a changelog set here is lost if the user stashes the preview manually. Only use this to override the preview's stored changelog at save time."
+      "description": "Optional one-line changelog OVERRIDE. Prefer setting this on the create_* tool instead — a changelog set here is lost if the user stashes the preview manually. Only use this to override the preview's stored changelog at stash time."
     }
   },
   "required": [
@@ -864,7 +864,7 @@ STASH a preview (from a create_* tool) — the actual SAVE; the doc stays PRIVAT
 
 ## `discard`
 
-Discard a preview (from a create_* tool) without stashing it. Call this when the user rejects it (e.g. 'discard', 'never mind', 'don't save it'). The unsaved draft is moved to Trash (recoverable from there), so it can no longer be stashed unless restored.
+Discard a preview (from a create_* tool) without stashing it. Call this when the user rejects it (e.g. 'discard', 'never mind', 'don't save it'). The unsaved version is moved to Trash (recoverable from there), so it can no longer be stashed unless restored.
 
 **Hints:** `{"title":"Discard","readOnlyHint":false,"destructiveHint":true,"idempotentHint":true,"openWorldHint":false}`
 
@@ -890,7 +890,7 @@ Discard a preview (from a create_* tool) without stashing it. Call this when the
 
 ## `get_organizations`
 
-List the workspaces (personal + team; ids and tool names call them organizations) the user can save documents to, with the currently-active one flagged. Call this to resolve a spoken name like "my team workspace" to its id before set_organization. Call them workspaces when talking to the user.
+List the workspaces (personal + team; ids and tool names call them organizations) the user can stash documents to, with the currently-active one flagged. Call this to resolve a spoken name like "my team workspace" to its id before set_organization. Call them workspaces when talking to the user.
 
 **Hints:** `{"title":"Get workspaces","readOnlyHint":true,"destructiveHint":false,"openWorldHint":false}`
 
@@ -952,7 +952,7 @@ Internal widget poll — the latest details for a preview (its current name + th
     },
     "artifactId": {
       "type": "string",
-      "description": "Internal — the artifact id the widget rendered, so status answers for THAT version (not the slug’s latest)."
+      "description": "Internal — the id of the version the widget rendered, so status answers for THAT version (not the slug’s latest)."
     }
   },
   "required": [
@@ -984,7 +984,7 @@ Internal — the inline preview widget fetches its own document bytes here. Not 
     },
     "artifactId": {
       "type": "string",
-      "description": "Internal — the artifact id the widget rendered, so bytes are for THAT version."
+      "description": "Internal — the id of the version the widget rendered, so bytes are for THAT version."
     },
     "link": {
       "type": "boolean",

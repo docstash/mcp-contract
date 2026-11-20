@@ -12,6 +12,43 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [5.1.0] — 2026-11-20
+
+### Changed
+
+- **One set of words in tool text and results.** A version that is not stashed
+  yet is an "unsaved version" (it was also a "draft" and "staged"); stashing is
+  "stash" (it was also "save" and "commit"); a version is a "version" (it was
+  also an "artifact"); a per-user share is a "share" (it was also a "grant").
+  Result fields follow: `stash` answers `stashed` (it was `committed`);
+  `list_access` answers `shares`, each with a `shareId`, `set_access` answers
+  `shareId`, and a doc carries `hasShares`; a trashed doc in `list_documents`
+  carries `trashedAt` (it was `deletedAt`). Argument names are unchanged,
+  including `artifactId` and `organizationId`.
+- **`set_organization` answers `{ organization }`**, with no `ok` flag: a failed
+  switch is an error result.
+- **One shape on both channels.** `stash` and `discard` answer the same fields
+  as text and as structured content: `stash` is `{ stashed, slug, name, url }`,
+  `discard` is `{ discarded, slug }`.
+- **A wrong-type `show_*` call is an error**, naming the right tool, the way a
+  wrong-type `edit_*` call already was.
+- **Workspace fields agree.** `list_org_members` answers the workspace's `kind`
+  (`personal` / `team`), as `get_organizations` and `set_organization` do. A
+  role is `admin` or `member`.
+- **`create_*` / `edit_*` previews carry each field once.** `slug`, `type`,
+  `name` and `artifactId` sit at the top level on every host; the nested
+  `preview` and `unsavedVersion` objects are gone.
+- **`set_trashed` answers the doc either way**, trashing or restoring.
+- **`list_documents` names its workspace count.** `usage.docsIncludingTrash`
+  (it was `usage.docs`), which is not the length of `documents`.
+- **No file link unless it is the only way to the content.** `show_*` and
+  `read_document` no longer carry `artifact.fileUrl`; `read_document` answers a
+  top-level `fileUrl` only for a doc whose body it can't return as text.
+- **Messages name a doc by what it is** ("a web page", "a PDF"), not by its
+  stored type.
+- **`revert_document` says where the version id is.** Each `created` and
+  `content_pushed` entry of `read_document`'s `history` carries its `artifactId`.
+
 ## [5.0.0] — 2026-11-16
 
 ### Removed (breaking)
