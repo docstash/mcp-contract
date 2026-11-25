@@ -12,6 +12,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/), and versioni
 - **MINOR** — a new tool, or a new capability / expanded contract on an existing one.
 - **PATCH** — wording, clarity, or de-duplication that does not change behavior.
 
+## [5.2.0] — 2026-11-22
+
+### Added
+
+- **`set_access` takes `notify`.** `false` shares without emailing the person;
+  the default `true` emails them as before.
+- **`set_access` answers `link` when `notify` is false:** the person's own
+  link, the one their invite carries, for the user to send themselves. On a
+  workspace whose custom domain serves the share, it opens on that domain.
+  When DocStash emails them, `link` is null.
+
 ## [5.1.0] — 2026-11-20
 
 ### Changed
